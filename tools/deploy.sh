@@ -17,9 +17,9 @@ init() {
 
   if [[ -z $(git branch -av | grep "$PAGES_BRANCH") ]]; then
     _no_branch=true
-    git checkout -bf "$PAGES_BRANCH"
+    git checkout -b "$PAGES_BRANCH"
   else
-    git checkout -f "$PAGES_BRANCH"
+    git checkout "$PAGES_BRANCH"
   fi
 }
 
