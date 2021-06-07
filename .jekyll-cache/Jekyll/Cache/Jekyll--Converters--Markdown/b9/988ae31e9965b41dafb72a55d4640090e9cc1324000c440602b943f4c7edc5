@@ -1,8 +1,0 @@
-I"X<blockquote>
-  <p><strong>Note</strong>: Add Markdown syntax content to file <code class="language-plaintext highlighter-rouge">_tabs/about.md</code> and it will show up on this page.</p>
-</blockquote>
-
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="k">print</span><span class="p">(</span><span class="s">'hello world'</span><span class="p">)</span>
-</pre></td></tr></tbody></table></code></pre></div></div>
-:ET

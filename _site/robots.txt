@@ -2,4 +2,4 @@ User-agent: *
 
 Disallow: /norobots/
 
-Sitemap: /sitemap.xml
+Sitemap: https://littlemoon-zh.github.io/sitemap.xml

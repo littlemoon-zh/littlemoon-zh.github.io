@@ -1,33 +1,63 @@
 [
   
   {
-    "title": "Welcome to Jekyll!",
-    "url": "/posts/welcome-to-jekyll/",
+    "title": "python异步io",
+    "url": "/posts/python-asyncio/",
     "categories": "",
-    "tags": "test",
-    "date": "2021-06-04 13:22:54 +0800",
+    "tags": "Python, io, 异步io",
+    "date": "2021-05-30 22:00:00 +0800",
     
 
 
 
 
 
-    "snippet": "Introduciton.You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when a file is u..."
+    "snippet": "异步ioexample让人对某件事情感兴趣的最好方法，就是让他看到这个事情的巨大效益，所以先来几个example。我们在这里用三种方式做同样的事情：请求一个url若干次，获取它的响应，打印出来，并且统计执行时间，请求的url是https://httpbin.org/uuid，每次请求这个接口，就会返回一个uuid，不过这里返回什么对我们不重要，重要的是有一个请求，有一个响应；三种实现方式是：  单线程同步  多线程同步  异步io统计时间逻辑就是分别记录任务执行前后的时间，然后打印差值得到任务运行时间；这里我们使用一种原理相同，但是看起来高级一点的方式，使用functools中的wrap..."
   },
   
   {
-    "title": "python",
-    "url": "/posts/hello-jekyll/",
+    "title": "快速排序的一些注意点",
+    "url": "/posts/quick-sort/",
     "categories": "",
-    "tags": "python, test",
-    "date": "2021-06-04 13:22:54 +0800",
+    "tags": "算法, 排序算法",
+    "date": "2019-12-20 22:00:00 +0800",
     
 
 
 
 
 
-    "snippet": "Brief introduction of.This is a test fileprint(&#39;hello&#39;)"
+    "snippet": "本文不是快速排序教程，而是记录其中值得关注的细节。快速排序的思想很简单，接触过的人应该很容易记住，就是按一定的策略选一个pivot，然后按照一定的策略把pivot移到合适的位置，使得前面的都比它小，后面的都比它大，一样的两边都可以放，最后分别处理前后两个部分。伪代码如下：quicksort a[], lo, hi:	if lo &amp;gt;= hi, return;	p = partition(a, lo, hi);	quicksort(a, lo, p - 1);	quicksort(a, p + 1, hi);所以关键就是这个partition函数的内容，一旦处理不好，就退化成O..."
+  },
+  
+  {
+    "title": "Java中的String",
+    "url": "/posts/Java-string/",
+    "categories": "",
+    "tags": "Java",
+    "date": "2019-04-08 19:50:00 +0800",
+    
+
+
+
+
+
+    "snippet": "不可变类型String是不可变类型（immutable），String.java源码中声明如下：private final byte[] value;String通过字节数组来实现，且被声明为private final byte类型，表明对外的不可访问性（private），以及不可改变性（final）；如果试图对其改变，会生成新的对象：String s1 = &quot;abc&quot;;String s2 = s1;System.out.println(s1 == s2);s1 = &quot;def&quot;;System.out.println(s1 == s2);输出结果为：..."
+  },
+  
+  {
+    "title": "Text and Typography",
+    "url": "/posts/Markdown-syntax/",
+    "categories": "",
+    "tags": "",
+    "date": "2000-06-05 13:22:54 +0800",
+    
+
+
+
+
+
+    "snippet": "This post is to show Markdown syntax rendering on Chirpy, you can also use it as an example of writing. Now, let’s start looking at text and typography.TitlesH1 - headingH4 - headingParagraphI wandered lonely as a cloudThat floats on high o’er vales and hills,When all at once I saw a crowd,A host..."
   }
   
 ]
