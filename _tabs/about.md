@@ -1,12 +1,14 @@
 ---
-title: About
+title: 关于
 icon: fas fa-info
 order: 4
 ---
 
 
-> **Note**: Add Markdown syntax content to file `_tabs/about.md` and it will show up on this page.
-
 ```python
-print('hello world')
+'''
+Hi, there!
+This is littlemoon from China.
+Hope you find the posts useful!
+'''
 ```

@@ -17,8 +17,6 @@ const resource = [
   '/index.html',
   '/404.html',
   
-    '/categories/',
-  
     '/tags/',
   
     '/archives/',
@@ -45,7 +43,7 @@ const resource = [
 const allowedDomains = [
   
 
-  '',
+  'littlemoon-zh.github.io',
 
   'fonts.gstatic.com',
   'fonts.googleapis.com',

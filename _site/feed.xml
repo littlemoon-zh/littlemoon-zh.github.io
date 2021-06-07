@@ -1,25 +1,233 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en-US" /><updated>2021-06-07T17:02:12+08:00</updated><id>/feed.xml</id><title type="html">Littlemoon</title><subtitle>A minimal, portfolio, sidebar, bootstrap Jekyll theme with responsive web design and focuses on text presentation.</subtitle><entry><title type="html">python</title><link href="/posts/hello-jekyll/" rel="alternate" type="text/html" title="python" /><published>2021-06-04T13:22:54+08:00</published><updated>2021-06-04T13:22:54+08:00</updated><id>/posts/hello-jekyll</id><content type="html" xml:base="/posts/hello-jekyll/">&lt;p&gt;Brief introduction of.
-&lt;!--more--&gt;
-This is a test file&lt;/p&gt;
 
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
-&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'hello'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name></name></author><category term="python" /><category term="test" /><summary type="html">Brief introduction of.</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="/posts/welcome-to-jekyll/" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2021-06-04T13:22:54+08:00</published><updated>2021-06-04T13:22:54+08:00</updated><id>/posts/welcome-to-jekyll</id><content type="html" xml:base="/posts/welcome-to-jekyll/">&lt;p&gt;Introduciton.
-&lt;!--more--&gt;
-You’ll find this post in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
 
-&lt;p&gt;Jekyll requires blog post files to be named according to the following format:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://littlemoon-zh.github.io/</id>
+  <title>Littlemoon</title>
+  <subtitle>littlemoon's blog</subtitle>
+  <updated>2021-06-08T00:04:40+08:00</updated>
+  <author>
+    <name>littlemoon</name>
+    <uri>https://littlemoon-zh.github.io/</uri>
+  </author>
+  <link rel="self" type="application/atom+xml" href="https://littlemoon-zh.github.io/feed.xml"/>
+  <link rel="alternate" type="text/html" hreflang="en-US"
+    href="https://littlemoon-zh.github.io/"/>
+  <generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator>
+  <rights> © 2021 littlemoon </rights>
+  <icon>/assets/img/favicons/favicon.ico</icon>
+  <logo>/assets/img/favicons/favicon-96x96.png</logo>
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR-MONTH-DAY-title.MARKUP&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;Where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR&lt;/code&gt; is a four-digit number, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MONTH&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DAY&lt;/code&gt; are both two-digit numbers, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MARKUP&lt;/code&gt; is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+  
+  <entry>
+    <title>python异步io</title>
+    <link href="https://littlemoon-zh.github.io/posts/python-asyncio/" rel="alternate" type="text/html" title="python异步io" />
+    <published>2021-05-30T22:00:00+08:00</published>
+  
+    <updated>2021-05-30T22:00:00+08:00</updated>
+  
+    <id>https://littlemoon-zh.github.io/posts/python-asyncio/</id>
+    <content src="https://littlemoon-zh.github.io/posts/python-asyncio/" />
+    <author>
+      <name>littlemoon</name>
+    </author>
 
-&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+  
+    
+  
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+  
+    <summary>
+      
 
-&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><category term="test" /><summary type="html">Introduciton.</summary></entry></feed>
+
+
+
+
+      异步io
+
+example
+
+让人对某件事情感兴趣的最好方法，就是让他看到这个事情的巨大效益，所以先来几个example。
+
+我们在这里用三种方式做同样的事情：请求一个url若干次，获取它的响应，打印出来，并且统计执行时间，
+
+请求的url是https://httpbin.org/uuid，每次请求这个接口，就会返回一个uuid，不过这里返回什么对我们不重要，重要的是有一个请求，有一个响应；
+
+三种实现方式是：
+
+
+  单线程同步
+  多线程同步
+  异步io
+
+
+统计时间
+逻辑就是分别记录任务执行前后的时间，然后打印差值得到任务运行时间；这里我们使用一种原理相同，但是看起来高级一点的方式，使用functools中的wraps做一个统计执行之间的装饰器：
+def time_cost(fn):
+    if asyncio.iscoroutinefunction(fn):
+      ...
+    </summary>
+  
+
+  </entry>
+
+  
+  <entry>
+    <title>快速排序的一些注意点</title>
+    <link href="https://littlemoon-zh.github.io/posts/quick-sort/" rel="alternate" type="text/html" title="快速排序的一些注意点" />
+    <published>2019-12-20T22:00:00+08:00</published>
+  
+    <updated>2019-12-20T22:00:00+08:00</updated>
+  
+    <id>https://littlemoon-zh.github.io/posts/quick-sort/</id>
+    <content src="https://littlemoon-zh.github.io/posts/quick-sort/" />
+    <author>
+      <name>littlemoon</name>
+    </author>
+
+  
+    
+  
+
+  
+    <summary>
+      
+
+
+
+
+
+      本文不是快速排序教程，而是记录其中值得关注的细节。
+
+快速排序的思想很简单，接触过的人应该很容易记住，就是按一定的策略选一个pivot，然后按照一定的策略把pivot移到合适的位置，使得前面的都比它小，后面的都比它大，一样的两边都可以放，最后分别处理前后两个部分。伪代码如下：
+
+quicksort a[], lo, hi:
+	if lo &amp;gt;= hi, return;
+	p = partition(a, lo, hi);
+	quicksort(a, lo, p - 1);
+	quicksort(a, p + 1, hi);
+
+
+所以关键就是这个partition函数的内容，一旦处理不好，就退化成O(N^2)的时间复杂度；最好的情况是O(NlogN)，因为每一轮都要遍历所有元素N，最少有LogN轮，也就是每次都对半划分的时候会达到最小。
+
+划分一般有两种策略，一个是单指针法，一个是...
+    </summary>
+  
+
+  </entry>
+
+  
+  <entry>
+    <title>Java中的String</title>
+    <link href="https://littlemoon-zh.github.io/posts/Java-string/" rel="alternate" type="text/html" title="Java中的String" />
+    <published>2019-04-08T19:50:00+08:00</published>
+  
+    <updated>2019-04-08T19:50:00+08:00</updated>
+  
+    <id>https://littlemoon-zh.github.io/posts/Java-string/</id>
+    <content src="https://littlemoon-zh.github.io/posts/Java-string/" />
+    <author>
+      <name>littlemoon</name>
+    </author>
+
+  
+    
+  
+
+  
+    <summary>
+      
+
+
+
+
+
+      不可变类型
+
+String是不可变类型（immutable），String.java源码中声明如下：
+
+private final byte[] value;
+
+
+String通过字节数组来实现，且被声明为private final byte类型，表明对外的不可访问性（private），以及不可改变性（final）；
+
+如果试图对其改变，会生成新的对象：
+
+String s1 = "abc";
+String s2 = s1;
+System.out.println(s1 == s2);
+s1 = "def";
+System.out.println(s1 == s2);
+
+
+输出结果为：
+
+true
+false
+
+
+原本s1和s2指向的是同一内存空间地址，所以先输出true，接着将”def”赋值给s1，由于String是不可变类型，不能够将原来地址中存放的内容改变成”def”，所以将创建...
+    </summary>
+  
+
+  </entry>
+
+  
+  <entry>
+    <title>Text and Typography</title>
+    <link href="https://littlemoon-zh.github.io/posts/Markdown-syntax/" rel="alternate" type="text/html" title="Text and Typography" />
+    <published>2000-06-05T13:22:54+08:00</published>
+  
+    <updated>2000-06-05T13:22:54+08:00</updated>
+  
+    <id>https://littlemoon-zh.github.io/posts/Markdown-syntax/</id>
+    <content src="https://littlemoon-zh.github.io/posts/Markdown-syntax/" />
+    <author>
+      <name>Cotes Chung</name>
+    </author>
+
+  
+    
+  
+
+  
+    <summary>
+      
+
+
+
+
+
+      This post is to show Markdown syntax rendering on Chirpy, you can also use it as an example of writing. Now, let’s start looking at text and typography.
+
+Titles
+
+H1 - heading
+
+
+H4 - heading
+
+
+
+Paragraph
+
+I wandered lonely as a cloud
+
+That floats on high o’er vales and hills,
+
+When all at once I saw a crowd,
+
+A host, of golden daffodils;
+
+Beside the lake, beneath the trees,
+
+Fluttering and danci...
+    </summary>
+  
+
+  </entry>
+
+</feed>
+
+
