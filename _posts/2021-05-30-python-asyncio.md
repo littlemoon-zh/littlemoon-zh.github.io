@@ -5,6 +5,7 @@ date:   2021-05-30 22:00:00 +0800
 tags: Python io 异步io
 excerpt_separator: <!--more-->
 comments: false
+abstract: "asyncio模块"
 ---
 
 # 异步io

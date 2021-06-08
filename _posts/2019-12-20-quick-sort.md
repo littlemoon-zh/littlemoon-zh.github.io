@@ -5,6 +5,7 @@ date:   2019-12-20 22:00:00 +0800
 tags: 算法 排序算法
 excerpt_separator: <!--more-->
 comments: false
+abstract: "几种划分的方法，以及下标的选择"
 ---
 
 本文不是快速排序教程，而是记录其中值得关注的细节。
