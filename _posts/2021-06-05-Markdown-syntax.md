@@ -5,6 +5,7 @@ date:   2000-06-05 13:22:54 +0800
 math: true
 mermaid: true
 comments: true
+abstract: "demo"
 image:
   src: https://cdn.jsdelivr.net/gh/cotes2020/chirpy-images/commons/devices-mockup.png
 ---

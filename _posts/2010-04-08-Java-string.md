@@ -5,8 +5,8 @@ date:   2019-04-08 19:50:00 +0800
 tags: Java
 excerpt_separator: <!--more-->
 comments: false
+abstract: "Java中的不可变数据类型String"
 ---
-
 ## **不可变类型**
 
 String是不可变类型（immutable），String.java源码中声明如下：
