@@ -6,6 +6,8 @@ tags: Python io 异步io
 excerpt_separator: <!--more-->
 comments: false
 abstract: "asyncio模块"
+image:
+  src: https://user-images.githubusercontent.com/85326814/121234395-3d275600-c8c6-11eb-9a30-1a6fff2a30b6.jpeg
 ---
 
 # 异步io
