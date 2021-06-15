@@ -1,7 +1,7 @@
 ---
 title: remove entry from linkedlist(using C)
 author: yhx
-date:   2000-06-16 02:30:00 +0800
+date:   2021-06-16 02:30:00 +0800
 math: true
 mermaid: true
 comments: true
