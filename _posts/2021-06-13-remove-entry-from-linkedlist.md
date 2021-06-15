@@ -1,14 +1,12 @@
 ---
 title: remove entry from linkedlist(using C)
 author: yhx
-date:   2021-06-16 02:30:00 +0800
+date:   2021-06-16 02:00:00 +0800
 math: true
 mermaid: true
 comments: true
 abstract: "think differently"
 tags: 算法 C
-image:
-  src: https://cdn.jsdelivr.net/gh/cotes2020/chirpy-images/commons/devices-mockup.png
 ---
 
 链表节点定义如下：
