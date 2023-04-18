@@ -2,6 +2,9 @@
 
 
 module.exports = {
+  images: {
+    unoptimized: true,
+  },
   reactStrictMode: true,
   basePath: '',
   assetPrefix: '',
