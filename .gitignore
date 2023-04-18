@@ -1,21 +1,35 @@
-# hidden files
-.*
-!.git*
-!.editorconfig
-!.nojekyll
-!.travis.yml
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# bundler cache
-_site
-vendor
-Gemfile.lock
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-# rubygem
-*.gem
+# testing
+/coverage
 
-# npm dependencies
-node_modules
-package-lock.json
+# next.js
+/.next/
+/out/
 
-.jekyll-cache
-.jekyll-cache/*
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
