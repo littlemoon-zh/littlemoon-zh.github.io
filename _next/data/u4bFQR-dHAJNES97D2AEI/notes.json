@@ -1,0 +1,1 @@
+{"pageProps":{"notes":[{"slug":"transformer-cross-attention-mlp-residual","title":"深入 Transformer 腹地：Cross-Attention、MLP 与残差连接的化学反应","date":"2026-02-26","summary":"用代码和直觉类比拆解 Transformer 里最容易卡住的两个问题：Cross-Attention 如何通信，以及 MLP 为什么不会破坏上下文语义。","draft":false,"tags":["transformer","attention","deep-learning"]}]},"__N_SSG":true}
