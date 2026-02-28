@@ -1,0 +1,75 @@
+---
+title: 深入 Transformer 腹地：Cross-Attention、MLP 与残差连接的化学反应
+date: 2026-02-26
+summary: 用代码和直觉类比拆解 Transformer 里最容易卡住的两个问题：Cross-Attention 如何通信，以及 MLP 为什么不会破坏上下文语义。
+tags: transformer, attention, deep-learning
+draft: false
+---
+
+# 深入 Transformer 腹地：Cross-Attention、MLP 与残差连接的化学反应
+
+在初学 Transformer 时，最容易卡壳的地方往往是结构之间的缝隙：特征是怎么流动的？这些结构拼在一起到底在做什么？
+
+这篇笔记用手写版 `microgpt.py`（完整 Encoder-Decoder 结构）来解释两个高频盲区。
+
+## 盲区一：原版翻译模型的灵魂通道（Cross-Attention）
+
+GPT 去掉了 Encoder，只保留 Decoder 做自回归生成。但在原版翻译场景中，Encoder 和 Decoder 必须通信。
+
+答案就是 Cross-Attention。
+
+### 直觉模型：翻译官向情报库提问
+
+Encoder 把源文本编码成 `enc_memory`，Decoder 在生成下一个词时，基于当前状态形成 Query，再去 `enc_memory` 检索相关信息。
+
+```python
+# Decoder Cross-Attention
+cross_q = linear(x, state_dict[f'dec_layer{li}.cross_wq'])
+enc_k_seq = [linear(mem, state_dict[f'dec_layer{li}.cross_wk']) for mem in enc_memory]
+enc_v_seq = [linear(mem, state_dict[f'dec_layer{li}.cross_wv']) for mem in enc_memory]
+```
+
+关键点：Q、K、V 可以来自不同来源并经过不同投影矩阵。
+
+- `Q`：来自 Decoder 当前状态（当前“想问什么”）
+- `K`：来自 Encoder Memory（“怎么索引”）
+- `V`：来自 Encoder Memory（“具体拿什么内容”）
+
+Attention 的本质是：把不同特征映射到可匹配的语义空间，再按权重提取信息。
+
+## 盲区二：为什么 MLP 不会破坏 Attention 的成果？
+
+每层 Transformer 常见流程是：
+
+1. Self-Attention：token 间信息交互
+2. MLP：token 内部的非线性变换
+
+常见疑问：Attention 好不容易建立了上下文关系，MLP 会不会把它打散？
+
+答案是不会，核心有两层原因。
+
+### 原因 1：高维空间中的增量表达
+
+Token 表示是高维向量。Attention 可能强化了某些维度上的关系，MLP 更像是在其他维度补充更抽象、更非线性的特征，而不是简单“覆盖旧信息”。
+
+### 原因 2：残差连接保证信息底本被保留
+
+```python
+x_residual = x
+x = mlp(x)
+x = x + x_residual
+```
+
+这是“在原有信息上做增量修正”，不是“把原信息替换掉”。
+
+如果初始向量是 $X_0$，那么每层更像是在累积增量：
+
+$$
+X_{final} = X_0 + (\Delta A_1 + \Delta M_1) + \dots + (\Delta A_n + \Delta M_n)
+$$
+
+其中 $\Delta A_i$ 是第 $i$ 层 Attention 的增量，$\Delta M_i$ 是第 $i$ 层 MLP 的增量。
+
+## 一句话总结
+
+Transformer 的深层可训练性来自一个很朴素的工程哲学：不要粗暴覆写上一层表示，而是在残差通道上持续做可控增量。
