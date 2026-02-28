@@ -26,6 +26,7 @@
   min-height: 100vh;
   padding: 1.4rem 1rem 2.4rem;
   color: var(--ink);
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 10% 10%, var(--glow-a) 0%, transparent 35%),
     radial-gradient(circle at 90% 16%, var(--glow-b) 0%, transparent 30%),
@@ -33,15 +34,18 @@
 }
 
 .shell {
-  width: min(980px, 100%);
+  width: 100%;
+  max-width: 980px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .topbar {
   position: sticky;
   top: 0.6rem;
   z-index: 3;
-  width: min(980px, 100%);
+  width: 100%;
+  max-width: 980px;
   margin: 0 auto 1.8rem;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -130,6 +134,7 @@
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
 }
 
 .card {
@@ -143,6 +148,7 @@
   gap: 0.7rem;
   min-height: 220px;
   transition: transform 180ms ease, border-color 180ms ease;
+  min-width: 0;
 }
 
 .card:hover {
@@ -194,6 +200,8 @@
   background: var(--card);
   box-shadow: var(--shadow);
   padding: 1.3rem 1.1rem;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .backLink {
@@ -251,6 +259,7 @@
   margin-top: 1.15rem;
   display: grid;
   gap: 1rem;
+  min-width: 0;
 }
 
 .content h1,
@@ -274,6 +283,7 @@
 .content p {
   color: var(--ink);
   line-height: 1.82;
+  overflow-wrap: anywhere;
 }
 
 .content ul,
@@ -282,6 +292,7 @@
   display: grid;
   gap: 0.5rem;
   line-height: 1.74;
+  min-width: 0;
 }
 
 .content blockquote {
@@ -296,6 +307,13 @@
   border: 1px solid var(--code-border);
   overflow-x: auto;
   line-height: 1.6;
+  max-width: 100%;
+}
+
+.content :global(figure[data-rehype-pretty-code-figure]) {
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .content :global(pre[data-theme*=' ']),
@@ -320,6 +338,13 @@
   padding: 0;
   border-radius: 0;
   background: transparent;
+}
+
+.content p code,
+.content li code,
+.content blockquote code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .content a {

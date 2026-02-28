@@ -44,7 +44,8 @@
   position: sticky;
   top: 0.8rem;
   z-index: 3;
-  width: min(1024px, 100%);
+  width: 100%;
+  max-width: 1024px;
   margin: 0 auto;
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--line);
@@ -108,7 +109,8 @@
 }
 
 .hero {
-  width: min(1024px, 100%);
+  width: 100%;
+  max-width: 1024px;
   margin: 3.2rem auto 0;
   padding: 1.2rem 0.2rem;
   animation: rise-in 500ms ease both;
@@ -169,7 +171,8 @@
 }
 
 .section {
-  width: min(1024px, 100%);
+  width: 100%;
+  max-width: 1024px;
   margin: 3.5rem auto 0;
 }
 
@@ -277,7 +280,8 @@
 }
 
 .about {
-  width: min(1024px, 100%);
+  width: 100%;
+  max-width: 1024px;
   margin: 3.8rem auto 0;
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -312,7 +316,8 @@
 }
 
 .footer {
-  width: min(1024px, 100%);
+  width: 100%;
+  max-width: 1024px;
   margin: 1.9rem auto 0;
   padding: 0.85rem 0.2rem 0;
   border-top: 1px solid var(--line);
