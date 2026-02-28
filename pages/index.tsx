@@ -13,6 +13,23 @@ type HomePageProps = {
 
 export default function Home({ notes, demos }: HomePageProps) {
   const year = new Date().getFullYear()
+  const resumeHighlights = [
+    {
+      title: 'Role',
+      value: 'AI Engineer',
+      detail: 'Shipping LLM-powered products and internal tools.',
+    },
+    {
+      title: 'Focus Areas',
+      value: 'Agent Systems, RAG, Eval',
+      detail: 'Designing reliable and measurable AI workflows.',
+    },
+    {
+      title: 'Core Stack',
+      value: 'Python, TypeScript, Prompt Engineering',
+      detail: 'Production-oriented engineering with practical tradeoffs.',
+    },
+  ]
 
   return (
     <>
@@ -35,7 +52,6 @@ export default function Home({ notes, demos }: HomePageProps) {
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
             <Link href="/demos">Demos</Link>
-            <a href="#about">About</a>
             <a href="#contact">Contact</a>
           </nav>
           <ThemeToggle
@@ -54,6 +70,15 @@ export default function Home({ notes, demos }: HomePageProps) {
             I publish technical notes, mental models, and interactive prototypes here.
             Everything is designed to be searchable and easy to extend.
           </p>
+          <div className={styles.resumeGrid}>
+            {resumeHighlights.map((item) => (
+              <article key={item.title} className={styles.resumeItem}>
+                <p className={styles.resumeTitle}>{item.title}</p>
+                <h3>{item.value}</h3>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
           <div className={styles.actions}>
             <Link href="/notes" className={styles.primaryBtn}>
               Explore Notes
@@ -116,15 +141,6 @@ export default function Home({ notes, demos }: HomePageProps) {
           <Link href="/demos" className={styles.sectionCta}>
             View all demos →
           </Link>
-        </section>
-
-        <section id="about" className={styles.about}>
-          <p className={styles.sectionLabel}>About</p>
-          <h2>Building a personal operating system for ideas</h2>
-          <p>
-            This website is where I collect what I learn, what I build, and what I want to
-            test next.
-          </p>
         </section>
 
         <footer id="contact" className={styles.footer}>
