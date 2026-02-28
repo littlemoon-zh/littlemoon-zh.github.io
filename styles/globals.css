@@ -7,10 +7,14 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light dark;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
+  width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
   color: #1b2a34;
