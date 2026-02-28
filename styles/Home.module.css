@@ -125,7 +125,7 @@
 
 .title {
   margin-top: 0.9rem;
-  max-width: 16ch;
+  max-width: 24ch;
   font-size: clamp(2.1rem, 4.5vw, 3.8rem);
   line-height: 1.08;
   font-family: var(--font-serif, 'Songti SC'), 'STSong', serif;
@@ -279,27 +279,39 @@
   background: var(--chip-bg);
 }
 
-.about {
-  width: 100%;
-  max-width: 1024px;
-  margin: 3.8rem auto 0;
+.resumeGrid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.resumeItem {
   border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--bg-soft);
-  box-shadow: var(--shadow);
-  padding: 1.35rem 1.2rem;
+  border-radius: 14px;
+  padding: 0.85rem 0.85rem 0.8rem;
+  background: var(--card);
 }
 
-.about h2 {
-  margin-top: 0.5rem;
-  font-size: clamp(1.3rem, 2.2vw, 1.9rem);
-  line-height: 1.38;
+.resumeTitle {
+  margin-top: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+  font-weight: 700;
 }
 
-.about p {
-  margin-top: 0.8rem;
-  color: var(--muted);
-  line-height: 1.7;
+.resumeItem h3 {
+  margin-top: 0.35rem;
+  font-size: 1.02rem;
+  line-height: 1.4;
+}
+
+.resumeItem p {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 
 .sectionCta {
@@ -379,8 +391,8 @@
     grid-template-columns: 1fr;
   }
 
-  .about {
-    padding: 1.1rem 1rem;
+  .resumeGrid {
+    grid-template-columns: 1fr;
   }
 
   .footer {
