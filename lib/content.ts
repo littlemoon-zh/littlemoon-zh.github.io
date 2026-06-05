@@ -47,6 +47,18 @@ const draftField = z.preprocess((value) => {
   return false
 }, z.boolean())
 
+const optionalUrlField = z.preprocess((value) => {
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  if (typeof value === 'string') {
+    return value.trim()
+  }
+
+  return value
+}, z.string().url().optional().or(z.literal('')).optional())
+
 const baseFrontmatterSchema = z.object({
   title: z.string().trim().min(1).optional(),
   date: dateField,
@@ -60,8 +72,8 @@ const noteFrontmatterSchema = baseFrontmatterSchema.extend({
 
 const demoFrontmatterSchema = baseFrontmatterSchema.extend({
   stack: stringArrayField.default([]),
-  liveUrl: z.string().trim().url().optional().or(z.literal('')).optional(),
-  repoUrl: z.string().trim().url().optional().or(z.literal('')).optional(),
+  liveUrl: optionalUrlField,
+  repoUrl: optionalUrlField,
 })
 
 type NoteFrontmatter = z.infer<typeof noteFrontmatterSchema>
@@ -185,9 +197,9 @@ function parseDemoRaw(raw: string, slug: string, fileName: string): DemoEntry {
     summary: frontmatter.summary,
     draft: frontmatter.draft,
     stack: frontmatter.stack,
-    liveUrl: frontmatter.liveUrl || undefined,
-    repoUrl: frontmatter.repoUrl || undefined,
     body: content.trim(),
+    ...(frontmatter.liveUrl ? { liveUrl: frontmatter.liveUrl } : {}),
+    ...(frontmatter.repoUrl ? { repoUrl: frontmatter.repoUrl } : {}),
   }
 }
 
@@ -240,8 +252,8 @@ export function getAllDemosMeta(): DemoMeta[] {
         summary: entry.summary,
         draft: entry.draft,
         stack: entry.stack,
-        liveUrl: entry.liveUrl,
-        repoUrl: entry.repoUrl,
+        ...(entry.liveUrl ? { liveUrl: entry.liveUrl } : {}),
+        ...(entry.repoUrl ? { repoUrl: entry.repoUrl } : {}),
       }
     })
     .filter((entry): entry is DemoMeta => entry !== null)

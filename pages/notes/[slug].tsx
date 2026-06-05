@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { formatDate } from '@/lib/date'
 import { getNoteBySlug, getNoteSlugs, type NoteEntry } from '@/lib/content'
 import { renderMarkdownToHtml } from '@/lib/markdown'
+import { site } from '@/lib/site'
 import styles from '@/styles/Content.module.css'
 
 type NoteDetailPageProps = {
@@ -17,14 +18,20 @@ export default function NoteDetailPage({ note }: NoteDetailPageProps) {
   return (
     <>
       <Head>
-        <title>{note.title} | Notes</title>
+        <title>{`${note.title} | ${site.name}`}</title>
         <meta name="description" content={note.summary} />
+        <link rel="canonical" href={`${site.url}/notes/${note.slug}`} />
+        <meta property="og:title" content={note.title} />
+        <meta property="og:description" content={note.summary} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`${site.url}/notes/${note.slug}`} />
+        <meta property="article:published_time" content={note.date} />
       </Head>
 
       <main className={styles.page}>
         <header className={styles.topbar}>
           <Link href="/" className={styles.brand}>
-            littlemoon
+            {site.name}
           </Link>
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
@@ -40,7 +47,7 @@ export default function NoteDetailPage({ note }: NoteDetailPageProps) {
         <article className={styles.shell}>
           <section className={styles.article}>
             <Link href="/notes" className={styles.backLink}>
-              ← Back to notes
+              Back to notes
             </Link>
             <h1 className={styles.articleTitle}>{note.title}</h1>
             <p className={styles.articleSummary}>{note.summary}</p>

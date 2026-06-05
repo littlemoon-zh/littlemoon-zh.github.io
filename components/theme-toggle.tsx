@@ -8,8 +8,8 @@ type ThemeToggleProps = {
 
 const options: Array<{ key: ThemeMode; label: string }> = [
   { key: 'system', label: 'Auto' },
-  { key: 'light', label: 'Light' },
-  { key: 'dark', label: 'Dark' },
+  { key: 'light', label: 'Day' },
+  { key: 'dark', label: 'Night' },
 ]
 
 export function ThemeToggle({

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Littlemoon Notes</title>
+    <link>https://littlemoon-zh.github.io/notes</link>
+    <description>AI engineering notes by Yuhang Xiao.</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Sat, 21 Mar 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>从 Harness Engineering 到视频 AI 的质量飞轮</title>
+      <link>https://littlemoon-zh.github.io/notes/harness-engineering-video-ai</link>
+      <guid>https://littlemoon-zh.github.io/notes/harness-engineering-video-ai</guid>
+      <pubDate>Sat, 21 Mar 2026 00:00:00 GMT</pubDate>
+      <description>读 OpenAI 的 Harness Engineering 文章后，结合我们视频 AI 产品的实际痛点，推导出一套基于人类反馈的质量闭环系统。核心发现：LLM 不能当评委，但可以当检查员。</description>
+    </item>
+    <item>
+      <title>深入 Transformer 腹地：Cross-Attention、MLP 与残差连接的化学反应</title>
+      <link>https://littlemoon-zh.github.io/notes/transformer-cross-attention-mlp-residual</link>
+      <guid>https://littlemoon-zh.github.io/notes/transformer-cross-attention-mlp-residual</guid>
+      <pubDate>Thu, 26 Feb 2026 00:00:00 GMT</pubDate>
+      <description>用代码和直觉类比拆解 Transformer 里最容易卡住的两个问题：Cross-Attention 如何通信，以及 MLP 为什么不会破坏上下文语义。</description>
+    </item>
+  </channel>
+</rss>

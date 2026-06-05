@@ -1,5 +1,8 @@
 export function formatDate(dateInput: string): string {
-  const date = new Date(dateInput)
+  const dateMatch = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  const date = dateMatch
+    ? new Date(Number(dateMatch[1]), Number(dateMatch[2]) - 1, Number(dateMatch[3]))
+    : new Date(dateInput)
 
   if (Number.isNaN(date.getTime())) {
     return dateInput

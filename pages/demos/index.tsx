@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { formatDate } from '@/lib/date'
 import { getAllDemosMeta, type DemoMeta } from '@/lib/content'
+import { site } from '@/lib/site'
 import { useStoredView } from '@/lib/use-stored-view'
 import styles from '@/styles/Content.module.css'
 
@@ -17,14 +18,20 @@ export default function DemosPage({ demos }: DemosPageProps) {
   return (
     <>
       <Head>
-        <title>Demos | Littlemoon</title>
-        <meta name="description" content="Interactive demos and engineering experiments." />
+        <title>{`Demos | ${site.name}`}</title>
+        <meta
+          name="description"
+          content="Prototype logs and lightweight demos for AI engineering ideas."
+        />
+        <link rel="canonical" href={`${site.url}/demos`} />
+        <meta property="og:title" content={`Demos | ${site.name}`} />
+        <meta property="og:description" content="Prototype notes behind Littlemoon." />
       </Head>
 
       <main className={styles.page}>
         <header className={styles.topbar}>
           <Link href="/" className={styles.brand}>
-            littlemoon
+            {site.name}
           </Link>
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
@@ -40,8 +47,10 @@ export default function DemosPage({ demos }: DemosPageProps) {
         <div className={styles.shell}>
           <section className={styles.header}>
             <p className={styles.label}>Demos</p>
-            <h1>All Demos</h1>
-            <p className={styles.subtitle}>Experiments, prototypes, and runnable examples.</p>
+            <h1>Prototype logs for ideas worth testing.</h1>
+            <p className={styles.subtitle}>
+              Short writeups for prompts, visualization experiments, and small interfaces.
+            </p>
             <div className={styles.viewControls} role="group" aria-label="Choose list layout">
               <button
                 type="button"
@@ -80,7 +89,7 @@ export default function DemosPage({ demos }: DemosPageProps) {
                       ))}
                     </div>
                   )}
-                  <span className={styles.cardLink}>View detail</span>
+                  <span className={styles.cardLink}>Open</span>
                 </Link>
               ))}
             </section>

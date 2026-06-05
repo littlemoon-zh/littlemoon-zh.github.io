@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { formatDate } from '@/lib/date'
 import { getAllNotesMeta, type NoteMeta } from '@/lib/content'
+import { site } from '@/lib/site'
 import { useStoredView } from '@/lib/use-stored-view'
 import styles from '@/styles/Content.module.css'
 
@@ -17,14 +18,20 @@ export default function NotesPage({ notes }: NotesPageProps) {
   return (
     <>
       <Head>
-        <title>Notes | Littlemoon</title>
-        <meta name="description" content="Knowledge notes and long-form writing." />
+        <title>{`Notes | ${site.name}`}</title>
+        <meta
+          name="description"
+          content="AI engineering notes on agents, evaluation loops, model internals, and production systems."
+        />
+        <link rel="canonical" href={`${site.url}/notes`} />
+        <meta property="og:title" content={`Notes | ${site.name}`} />
+        <meta property="og:description" content={site.chineseDescription} />
       </Head>
 
       <main className={styles.page}>
         <header className={styles.topbar}>
           <Link href="/" className={styles.brand}>
-            littlemoon
+            {site.name}
           </Link>
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
@@ -40,8 +47,10 @@ export default function NotesPage({ notes }: NotesPageProps) {
         <div className={styles.shell}>
           <section className={styles.header}>
             <p className={styles.label}>Notes</p>
-            <h1>All Notes</h1>
-            <p className={styles.subtitle}>Ideas, writeups, and technical deep dives.</p>
+            <h1>Engineering notes, written after the work.</h1>
+            <p className={styles.subtitle}>
+              Long-form notes on AI systems, evaluation, product quality, and model internals.
+            </p>
             <div className={styles.viewControls} role="group" aria-label="Choose list layout">
               <button
                 type="button"
@@ -80,7 +89,7 @@ export default function NotesPage({ notes }: NotesPageProps) {
                       ))}
                     </div>
                   )}
-                  <span className={styles.cardLink}>Read note</span>
+                  <span className={styles.cardLink}>Read</span>
                 </Link>
               ))}
             </section>

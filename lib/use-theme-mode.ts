@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
 
@@ -10,6 +10,19 @@ function getSystemTheme(): 'light' | 'dark' {
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function getStoredMode(): ThemeMode {
+  if (typeof window === 'undefined') {
+    return 'system'
+  }
+
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
+  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+}
+
+function getThemeEventName() {
+  return 'littlemoon:theme-mode-change'
 }
 
 function applyTheme(mode: ThemeMode) {
@@ -30,43 +43,45 @@ function applyTheme(mode: ThemeMode) {
 }
 
 export function useThemeMode() {
-  const [mode, setMode] = useState<ThemeMode>('system')
-
-  useEffect(() => {
+  const subscribe = useCallback((onStoreChange: () => void) => {
     if (typeof window === 'undefined') {
-      return
-    }
-
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-    const initialMode: ThemeMode =
-      stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
-    setMode(initialMode)
-    applyTheme(initialMode)
-  }, [])
-
-  useEffect(() => {
-    applyTheme(mode)
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(THEME_STORAGE_KEY, mode)
-    }
-  }, [mode])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
+      return () => {}
     }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => {
-      if (mode === 'system') {
-        applyTheme('system')
+    const customEventName = getThemeEventName()
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === THEME_STORAGE_KEY) {
+        onStoreChange()
       }
     }
 
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
+    mediaQuery.addEventListener('change', onStoreChange)
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener(customEventName, onStoreChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', onStoreChange)
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener(customEventName, onStoreChange)
+    }
+  }, [])
+
+  const mode = useSyncExternalStore<ThemeMode>(subscribe, getStoredMode, () => 'system')
+
+  useEffect(() => {
+    applyTheme(mode)
   }, [mode])
+
+  const setMode = useCallback((nextMode: ThemeMode) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextMode)
+    applyTheme(nextMode)
+    window.dispatchEvent(new Event(getThemeEventName()))
+  }, [])
 
   return {
     mode,
