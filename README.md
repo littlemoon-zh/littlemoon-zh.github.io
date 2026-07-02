@@ -42,9 +42,31 @@ title: Post title
 date: 2026-02-28
 summary: Short summary for list pages
 tags: transformer, attention
+layout: article
 draft: false
 ---
 ```
+
+Hosted artifact note:
+
+```md
+---
+title: Interactive report title
+date: 2026-07-02
+summary: Short summary for list pages
+tags: research, dataviz
+layout: artifact
+artifact: registered-component-id
+artifactChrome: immersive
+draft: false
+---
+```
+
+Artifact notes use the same `/notes/yyyy-mm-dd-title` URL pattern, but render inside a standalone hosted page shell. `artifactChrome` can be:
+
+- `browser`: shared hosted shell with browser-like frame
+- `immersive`: shared top bar, artifact controls the main page layout
+- `custom`: artifact component controls the whole page surface
 
 Demo:
 
@@ -76,6 +98,12 @@ Rendering uses a standard pipeline:
 ```bash
 npm run new:note -- --slug your-note-slug
 npm run new:demo -- --slug your-demo-slug
+```
+
+Create a hosted artifact note:
+
+```bash
+npm run new:note -- --slug yyyy-mm-dd-title --layout artifact --artifact component-id --artifact-chrome immersive
 ```
 
 Optional title:

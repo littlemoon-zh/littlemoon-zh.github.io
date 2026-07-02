@@ -21,7 +21,7 @@ export default function NotesPage({ notes }: NotesPageProps) {
         <title>{`Notes | ${site.name}`}</title>
         <meta
           name="description"
-          content="AI engineering notes on agents, evaluation loops, model internals, and production systems."
+          content="Hosted HTML notes, research reports, and engineering writeups."
         />
         <link rel="canonical" href={`${site.url}/notes`} />
         <meta property="og:title" content={`Notes | ${site.name}`} />
@@ -47,9 +47,9 @@ export default function NotesPage({ notes }: NotesPageProps) {
         <div className={styles.shell}>
           <section className={styles.header}>
             <p className={styles.label}>Notes</p>
-            <h1>Engineering notes, written after the work.</h1>
+            <h1>Hosted notes and research reports.</h1>
             <p className={styles.subtitle}>
-              Long-form notes on AI systems, evaluation, product quality, and model internals.
+              这里存放可直接访问的 HTML 文章：研究报告、工程笔记、数据可视化和长期复盘。
             </p>
             <div className={styles.viewControls} role="group" aria-label="Choose list layout">
               <button
@@ -77,7 +77,9 @@ export default function NotesPage({ notes }: NotesPageProps) {
             <section className={`${styles.grid} ${view === 'rows' ? styles.rows : ''}`}>
               {notes.map((note) => (
                 <Link key={note.slug} href={`/notes/${note.slug}`} className={styles.card}>
-                  <p className={styles.meta}>{formatDate(note.date)}</p>
+                  <p className={styles.meta}>
+                    {formatDate(note.date)} / {note.layout === 'artifact' ? 'Hosted HTML' : 'Note'}
+                  </p>
                   <h2>{note.title}</h2>
                   <p>{note.summary}</p>
                   {note.tags.length > 0 && (
@@ -89,7 +91,7 @@ export default function NotesPage({ notes }: NotesPageProps) {
                       ))}
                     </div>
                   )}
-                  <span className={styles.cardLink}>Read</span>
+                  <span className={styles.cardLink}>{note.layout === 'artifact' ? 'Open' : 'Read'}</span>
                 </Link>
               ))}
             </section>

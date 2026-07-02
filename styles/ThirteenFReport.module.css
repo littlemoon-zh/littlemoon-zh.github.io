@@ -1,0 +1,982 @@
+.report {
+  margin: 36px 0 54px;
+  color: var(--ink);
+}
+
+.reportHero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.78fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: end;
+  padding: clamp(30px, 5vw, 52px) 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.reportHero h2,
+.sectionHead h3 {
+  margin-top: 12px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.reportHero h2 {
+  font-size: clamp(2.8rem, 7vw, 7.2rem);
+}
+
+.reportHero p:not(.eyebrow),
+.sectionHead p {
+  max-width: 720px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+
+.metricGrid div,
+.managerStrip div,
+.companyDetail,
+.movesList {
+  background: var(--surface);
+}
+
+.metricGrid div {
+  min-height: 142px;
+  padding: 22px;
+}
+
+.metricGrid span,
+.managerStrip span {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 3vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.metricGrid p,
+.managerStrip p {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.viewSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 28px 0 0;
+}
+
+.viewButton,
+.viewButtonActive {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.viewButton {
+  color: var(--ink);
+  background: transparent;
+}
+
+.viewButtonActive {
+  color: var(--page-bg);
+  background: var(--ink);
+}
+
+.viewButton:hover,
+.viewButtonActive:hover {
+  transform: translateY(-1px);
+}
+
+.reportSection {
+  padding-top: clamp(34px, 5vw, 58px);
+}
+
+.sectionHead {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.62fr);
+  gap: clamp(24px, 4vw, 54px);
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.sectionHead h3 {
+  max-width: 760px;
+  font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.chartWrap {
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  overflow: hidden;
+}
+
+.chartWrap svg {
+  width: 100%;
+  height: auto;
+}
+
+.gridLine,
+.tickLine {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.valueLine,
+.churnLine,
+.sparkline polyline,
+.breakdownLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.valueLine {
+  stroke: #0b7a75;
+  stroke-width: 5;
+}
+
+.churnLine {
+  stroke: #c2691a;
+  stroke-width: 3;
+  stroke-dasharray: 8 8;
+}
+
+.axisText {
+  fill: var(--muted);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend i {
+  width: 28px;
+  height: 3px;
+}
+
+.valueKey {
+  background: #0b7a75;
+}
+
+.churnKey {
+  background: #c2691a;
+}
+
+.holderKey {
+  background: #c2691a;
+}
+
+.managerStrip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 22px;
+  background: var(--line);
+}
+
+.managerStrip div {
+  min-height: 154px;
+  padding: 20px;
+}
+
+.managerStrip strong {
+  display: block;
+  margin-top: 18px;
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.heatmapScroller {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.heatmap {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.heatmap th,
+.heatmap td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.heatmap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.heatmap tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 220px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.heatmap small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.heatCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 30px;
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.avgCell {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.companyExplorer {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.44fr) minmax(0, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+
+.companyList {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  max-height: 680px;
+  overflow: auto;
+  background: var(--line);
+}
+
+.companySearch {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  background: var(--surface);
+}
+
+.companySearch input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--page-bg);
+  font: inherit;
+  font-size: 0.86rem;
+}
+
+.companySearch span,
+.emptyCompanySearch {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.emptyCompanySearch {
+  margin: 0;
+  padding: 20px 14px;
+  background: var(--surface);
+}
+
+.companyRow {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) minmax(94px, auto);
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.companyRow > span {
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.companyRow strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.companyRowMeta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.companyRowMeta span {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.companyRowMeta em {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.companyRowActive,
+.companyRow:hover {
+  color: var(--ink);
+  background: var(--surface-strong);
+}
+
+.companyDetail {
+  min-height: 680px;
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.companyDetail h3 {
+  max-width: 760px;
+  margin-top: 12px;
+  color: var(--ink);
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 0.98;
+}
+
+.companyDetail p:not(.eyebrow) {
+  max-width: 680px;
+  margin-top: 18px;
+  color: var(--muted);
+  line-height: 1.78;
+}
+
+.companyTimeline {
+  margin-top: 34px;
+  padding: clamp(16px, 2.4vw, 28px);
+  border: 1px solid var(--line);
+  background: var(--page-bg);
+}
+
+.timelineHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 0.68fr) minmax(220px, 0.32fr);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+.timelineHeader h4 {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  line-height: 1.02;
+}
+
+.timelineHeader p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.timelineReadout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 18px;
+  background: var(--line);
+}
+
+.timelineReadout span {
+  min-height: 86px;
+  padding: 16px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.timelineReadout strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 2.4vw, 2rem);
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+.companyTimeline svg {
+  width: 100%;
+  height: auto;
+}
+
+.timelineAxisLabel {
+  fill: var(--muted);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.timelineBar,
+.timelineBarActive {
+  transition: opacity 160ms ease, fill 160ms ease;
+}
+
+.timelineBar {
+  fill: color-mix(in srgb, #0b7a75 48%, var(--surface));
+  opacity: 0.72;
+}
+
+.timelineBarActive {
+  fill: #0b7a75;
+  opacity: 1;
+}
+
+.holderLine {
+  fill: none;
+  stroke: #c2691a;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
+}
+
+.timelineCursor {
+  stroke: var(--line-strong);
+  stroke-dasharray: 5 6;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.valuePoint {
+  fill: #0b7a75;
+  stroke: var(--page-bg);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.holderPoint {
+  fill: #c2691a;
+  stroke: var(--page-bg);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.timelineHitArea {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.timelineHitArea:hover {
+  fill: rgba(11, 122, 117, 0.06);
+}
+
+.companyTimeline [role='button']:focus .timelineHitArea {
+  fill: rgba(194, 105, 26, 0.1);
+  outline: none;
+}
+
+.sparkline {
+  width: min(100%, 520px);
+  margin-top: 34px;
+}
+
+.sparkline polyline {
+  stroke: #0b7a75;
+  stroke-width: 5;
+}
+
+.deltaBars {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(24px, 1fr));
+  align-items: end;
+  gap: 8px;
+  height: 96px;
+  margin-top: 20px;
+  padding: 10px 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.deltaBars div {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  height: 100%;
+  background: color-mix(in srgb, var(--code-bg) 72%, transparent);
+}
+
+.deltaBars span {
+  width: 100%;
+  min-height: 6px;
+}
+
+.deltaPositive {
+  background: #0b7a75;
+}
+
+.deltaNegative {
+  background: #b24a3f;
+}
+
+.deltaBars em {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 800;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.companyMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 30px;
+  background: var(--line);
+}
+
+.companyMetrics span {
+  min-height: 108px;
+  padding: 18px;
+  color: var(--muted);
+  background: var(--page-bg);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.companyMetrics strong {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2.6vw, 2.1rem);
+  text-transform: none;
+}
+
+.eventList {
+  margin-top: 26px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.breakdownSection {
+  margin-top: 34px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.breakdownHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 0.68fr) minmax(220px, 0.32fr);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.breakdownHeader h4 {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: clamp(1.45rem, 3vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.breakdownHeader p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.breakdownChart {
+  padding: clamp(14px, 2vw, 22px);
+  border: 1px solid var(--line);
+  background: var(--page-bg);
+}
+
+.breakdownChart svg {
+  width: 100%;
+  height: auto;
+}
+
+.breakdownLine {
+  stroke-width: 3;
+  opacity: 0.88;
+}
+
+.breakdownLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 16px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.breakdownLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.breakdownLegend i {
+  width: 18px;
+  height: 3px;
+}
+
+.breakdownGrid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.36fr) minmax(0, 0.64fr);
+  gap: 1px;
+  margin-top: 18px;
+  background: var(--line);
+}
+
+.holderBars,
+.breakdownTableScroller {
+  background: var(--page-bg);
+}
+
+.holderBars {
+  padding: 18px;
+}
+
+.holderBars > div + div {
+  margin-top: 14px;
+}
+
+.holderBars div div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.holderBars strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.84rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.holderBars span {
+  flex: 0 0 auto;
+}
+
+.holderBars em {
+  display: block;
+  height: 8px;
+  margin-top: 8px;
+  background: var(--code-bg);
+  font-style: normal;
+}
+
+.holderBars i {
+  display: block;
+  height: 100%;
+}
+
+.breakdownTableScroller {
+  overflow-x: auto;
+}
+
+.breakdownTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.breakdownTable th,
+.breakdownTable td {
+  padding: 9px 7px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.breakdownTable thead th {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.breakdownTable tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 170px;
+  background: var(--page-bg);
+  color: var(--ink);
+  text-align: left;
+}
+
+.breakdownTable small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 500;
+}
+
+.breakdownCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
+  background: #0b7a75;
+  color: #f5f7f0;
+  font-weight: 900;
+}
+
+.breakdownLatest {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.eventList div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.eventList strong {
+  color: var(--ink);
+}
+
+.eventList em {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.movesList {
+  border: 1px solid var(--line);
+}
+
+.movesHeader,
+.moveRow {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.5fr) minmax(160px, 1fr) minmax(90px, auto);
+  gap: 18px;
+  align-items: center;
+}
+
+.movesHeader {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.moveRow {
+  min-height: 72px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.moveRow:last-child {
+  border-bottom: 0;
+}
+
+.moveRow strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.94rem;
+}
+
+.moveRow span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.moveBarTrack {
+  height: 12px;
+  background: var(--code-bg);
+}
+
+.moveBarPositive,
+.moveBarNegative {
+  display: block;
+  height: 100%;
+}
+
+.moveBarPositive {
+  background: #0b7a75;
+}
+
+.moveBarNegative {
+  margin-left: auto;
+  background: #b24a3f;
+}
+
+.positive,
+.negative {
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+}
+
+.positive {
+  color: #0b7a75;
+}
+
+.negative {
+  color: #b24a3f;
+}
+
+@media (max-width: 980px) {
+  .reportHero,
+  .sectionHead,
+  .companyExplorer {
+    grid-template-columns: 1fr;
+  }
+
+  .metricGrid,
+  .managerStrip,
+  .companyMetrics,
+  .breakdownGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .companyDetail {
+    min-height: 0;
+  }
+
+  .breakdownHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .timelineHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .timelineReadout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .metricGrid,
+  .managerStrip,
+  .companyMetrics,
+  .timelineReadout,
+  .breakdownGrid,
+  .movesHeader,
+  .moveRow,
+  .eventList div {
+    grid-template-columns: 1fr;
+  }
+
+  .deltaBars {
+    gap: 4px;
+  }
+
+  .metricGrid div,
+  .managerStrip div {
+    min-height: 116px;
+  }
+
+  .movesHeader {
+    display: none;
+  }
+
+  .moveRow {
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewButton,
+  .viewButtonActive,
+  .companyRow {
+    transition: none;
+  }
+}

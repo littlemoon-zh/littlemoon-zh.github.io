@@ -1,0 +1,39 @@
+---
+title: 20 家主流机构最近三年 13F 持仓波动观察
+date: 2026-07-02
+summary: 基于 SEC EDGAR 的 13F-HR XML 信息表，汇总 20 家主流机构 2023Q2 到 2026Q1 的持仓报告，观察机构层面的 reported-value swing 和公司层面的持仓波动。
+tags: 13f, investing, sec-edgar, dataviz, research
+layout: artifact
+artifact: thirteen-f-report
+artifactChrome: immersive
+draft: false
+---
+
+# 20 家主流机构最近三年 13F 持仓波动观察
+
+## 读图结论
+
+这组数据的第一层结论是：**被动巨头决定总量，交易型机构决定波动形状**。BlackRock、Vanguard Group、State Street 这类管理人贡献了绝大部分 13F 报告市值；Citadel、Two Sigma、Millennium、Renaissance、D. E. Shaw 这类多策略/量化机构在季度 reported-value swing 上明显更高。
+
+第二层结论是：过去三年机构合计持仓波动最醒目的公司集中在 AI、平台型科技、能源和少数新纳入指数/快速重估的名字上。当前派生数据里，Palantir、AppLovin、NVIDIA、GE Vernova、MicroStrategy、Broadcom 等都反复出现大额季度变化。
+
+第三层结论要谨慎读：13F 的 `value` 是报告日持仓市值，不是交易流水。一个季度里的变化可能来自买卖、股价变化、拆股、纳入/剔除指数、管理人重组、CUSIP 变化或新增/修订 filing。这里把它叫做 reported-value swing，而不是“真实换手率”。
+
+## 样本和口径
+
+机构样本包括 Berkshire Hathaway、Vanguard Group、BlackRock、State Street、FMR、JPMorgan Chase、Morgan Stanley、Goldman Sachs、Bank of America、Citadel Advisors、Millennium Management、Bridgewater Associates、Renaissance Technologies、D. E. Shaw、Two Sigma Investments、Tiger Global、Coatue Management、Third Point、Pershing Square 和 Appaloosa。
+
+数据来自 [SEC EDGAR](https://www.sec.gov/cgi-bin/browse-edgar) 的 13F-HR XML information table。窗口为 2023-06-30 到 2026-03-31。BlackRock 在 2024 年后切换到新的 13F CIK，本报告合并新旧 CIK；Vanguard Group 老 CIK 最新可见到 2025-12-31，所以 2026Q1 的汇总覆盖为 19/20 家。
+
+处理规则：
+
+- 按机构、报告期、CUSIP 聚合重复行。
+- 排除 `putCall` 字段存在的期权记录，只保留非期权多头披露。
+- 对同一报告期优先使用非修订 13F-HR；若存在完整 restatement，则用 restatement 替换。
+- 公司层面仍按 CUSIP 分开，不合并不同 share class。
+
+## 我会怎么继续看
+
+如果要把这变成更接近投资研究的版本，下一步不是再堆更多图，而是引入价格和拆股调整：用 share count 的变化来近似真实增减仓，再把股价带来的市值波动剥离掉。现在这个页面适合做异常发现和研究入口，不适合直接当交易信号。
+
+可追溯文件：派生数据在 `/data/13f-analysis.json`，生成脚本在 `/scripts/build-13f-analysis.js`。

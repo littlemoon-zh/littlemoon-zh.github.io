@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { formatDate } from '@/lib/date'
-import { getAllDemosMeta, type DemoMeta } from '@/lib/content'
+import { getPortfolioDemosMeta, type DemoMeta } from '@/lib/content'
 import { site } from '@/lib/site'
 import { useStoredView } from '@/lib/use-stored-view'
 import styles from '@/styles/Content.module.css'
@@ -21,7 +21,7 @@ export default function DemosPage({ demos }: DemosPageProps) {
         <title>{`Demos | ${site.name}`}</title>
         <meta
           name="description"
-          content="Prototype logs and lightweight demos for AI engineering ideas."
+          content="Personal demos and video AI prototypes by Yuhang Xiao."
         />
         <link rel="canonical" href={`${site.url}/demos`} />
         <meta property="og:title" content={`Demos | ${site.name}`} />
@@ -47,9 +47,9 @@ export default function DemosPage({ demos }: DemosPageProps) {
         <div className={styles.shell}>
           <section className={styles.header}>
             <p className={styles.label}>Demos</p>
-            <h1>Prototype logs for ideas worth testing.</h1>
+            <h1>Personal demos, starting with video work.</h1>
             <p className={styles.subtitle}>
-              Short writeups for prompts, visualization experiments, and small interfaces.
+              可运行的个人作品会放在这里，优先是视频 AI、生成流程和交互原型。
             </p>
             <div className={styles.viewControls} role="group" aria-label="Choose list layout">
               <button
@@ -94,7 +94,7 @@ export default function DemosPage({ demos }: DemosPageProps) {
               ))}
             </section>
           ) : (
-            <section className={styles.empty}>No demos published yet.</section>
+            <section className={styles.empty}>Video demos will appear here.</section>
           )}
         </div>
       </main>
@@ -105,7 +105,7 @@ export default function DemosPage({ demos }: DemosPageProps) {
 export const getStaticProps: GetStaticProps<DemosPageProps> = async () => {
   return {
     props: {
-      demos: getAllDemosMeta(),
+      demos: getPortfolioDemosMeta(),
     },
   }
 }

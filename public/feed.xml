@@ -5,7 +5,14 @@
     <link>https://littlemoon-zh.github.io/notes</link>
     <description>AI engineering notes by Yuhang Xiao.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Sat, 21 Mar 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 02 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>20 家主流机构最近三年 13F 持仓波动观察</title>
+      <link>https://littlemoon-zh.github.io/notes/2026-07-02-13f-institutional-holdings-volatility</link>
+      <guid>https://littlemoon-zh.github.io/notes/2026-07-02-13f-institutional-holdings-volatility</guid>
+      <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
+      <description>基于 SEC EDGAR 的 13F-HR XML 信息表，汇总 20 家主流机构 2023Q2 到 2026Q1 的持仓报告，观察机构层面的 reported-value swing 和公司层面的持仓波动。</description>
+    </item>
     <item>
       <title>从 Harness Engineering 到视频 AI 的质量飞轮</title>
       <link>https://littlemoon-zh.github.io/notes/harness-engineering-video-ai</link>

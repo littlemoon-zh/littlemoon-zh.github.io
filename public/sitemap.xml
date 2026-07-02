@@ -13,6 +13,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://littlemoon-zh.github.io/notes/2026-07-02-13f-institutional-holdings-volatility</loc>
+    <lastmod>2026-07-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://littlemoon-zh.github.io/notes/harness-engineering-video-ai</loc>
     <lastmod>2026-03-21</lastmod>
     <priority>0.8</priority>
@@ -21,15 +26,5 @@
     <loc>https://littlemoon-zh.github.io/notes/transformer-cross-attention-mlp-residual</loc>
     <lastmod>2026-02-26</lastmod>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://littlemoon-zh.github.io/demos/prompt-playground</loc>
-    <lastmod>2026-02-26</lastmod>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://littlemoon-zh.github.io/demos/visualization-sandbox</loc>
-    <lastmod>2026-02-25</lastmod>
-    <priority>0.5</priority>
   </url>
 </urlset>
