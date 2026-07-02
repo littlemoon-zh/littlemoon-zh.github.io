@@ -17,6 +17,40 @@ type HomePageProps = {
   demos: DemoMeta[]
 }
 
+function noteTypeLabel(note: NoteMeta): string {
+  if (note.layout === 'site' || note.layout === 'artifact') {
+    return 'Hosted HTML'
+  }
+
+  return 'Note'
+}
+
+function HomeNoteItem({ post }: { post: NoteMeta }) {
+  const content = (
+    <>
+      <p className={styles.meta}>
+        {formatDate(post.date)} / {noteTypeLabel(post)}
+      </p>
+      <h2>{post.title}</h2>
+      <p>{post.summary}</p>
+    </>
+  )
+
+  if (post.source === 'site') {
+    return (
+      <a href={post.href} className={styles.itemBlock}>
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={post.href} className={styles.itemBlock}>
+      {content}
+    </Link>
+  )
+}
+
 export default function Home({
   notes,
   demos,
@@ -37,7 +71,6 @@ export default function Home({
         <meta property="og:image" content={`${site.url}${site.image}`} />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href={site.url} />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.page}>
         <header className={styles.topbar}>
@@ -47,6 +80,9 @@ export default function Home({
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
             <Link href="/demos">Demos</Link>
+            <a href={site.linkedin} target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
             <a href={site.github} target="_blank" rel="noreferrer">
               GitHub
             </a>
@@ -75,13 +111,7 @@ export default function Home({
             </div>
             <div className={styles.itemList}>
               {notes.map((post) => (
-                <Link key={post.slug} href={`/notes/${post.slug}`} className={styles.itemBlock}>
-                  <p className={styles.meta}>
-                    {formatDate(post.date)} / {post.layout === 'artifact' ? 'Hosted HTML' : 'Note'}
-                  </p>
-                  <h2>{post.title}</h2>
-                  <p>{post.summary}</p>
-                </Link>
+                <HomeNoteItem key={post.href} post={post} />
               ))}
             </div>
           </div>
@@ -116,6 +146,9 @@ export default function Home({
           <p>© {year} {site.name}</p>
           <div className={styles.footerLinks}>
             <a href={`mailto:${site.email}`}>Email</a>
+            <a href={site.linkedin} target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
             <a href={site.github} target="_blank" rel="noreferrer">
               GitHub
             </a>

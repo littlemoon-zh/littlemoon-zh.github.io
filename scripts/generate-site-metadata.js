@@ -6,6 +6,23 @@ const SITE_URL = 'https://littlemoon-zh.github.io'
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 const CONTENT_DIR = path.join(process.cwd(), 'content')
 
+function parseDraft(value) {
+  return value === true || String(value).toLowerCase() === 'true'
+}
+
+function normalizeDate(value) {
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return date.toISOString().slice(0, 10)
+}
+
 function escapeXml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -15,7 +32,13 @@ function escapeXml(value) {
     .replaceAll("'", '&apos;')
 }
 
-function listEntries(kind) {
+function sortByDateDesc(entries) {
+  return [...entries].sort(
+    (a, b) => Date.parse(b.date || '1970-01-01') - Date.parse(a.date || '1970-01-01'),
+  )
+}
+
+function listMarkdownEntries(kind) {
   const directory = path.join(CONTENT_DIR, kind)
   if (!fs.existsSync(directory)) {
     return []
@@ -28,19 +51,61 @@ function listEntries(kind) {
       const slug = file.replace(/\.mdx?$/, '')
       const raw = fs.readFileSync(path.join(directory, file), 'utf8')
       const parsed = matter(raw)
-      const draft = parsed.data.draft === true || String(parsed.data.draft).toLowerCase() === 'true'
 
       return {
         kind,
         slug,
+        url: `/${kind}/${slug}`,
         title: parsed.data.title || slug,
         summary: parsed.data.summary || '',
-        date: parsed.data.date ? new Date(parsed.data.date).toISOString().slice(0, 10) : null,
-        draft,
+        date: normalizeDate(parsed.data.date),
+        draft: parseDraft(parsed.data.draft),
       }
     })
     .filter((entry) => !entry.draft)
-    .sort((a, b) => Date.parse(b.date || '1970-01-01') - Date.parse(a.date || '1970-01-01'))
+}
+
+function listHostedSiteEntries() {
+  const directory = path.join(CONTENT_DIR, 'sites')
+  if (!fs.existsSync(directory)) {
+    return []
+  }
+
+  return fs
+    .readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const slug = entry.name
+      const siteDirectory = path.join(directory, slug)
+      const metadataPath = path.join(siteDirectory, 'site.json')
+      const indexPath = path.join(siteDirectory, 'index.html')
+
+      if (!fs.existsSync(metadataPath) || !fs.existsSync(indexPath)) {
+        return null
+      }
+
+      let metadata
+      try {
+        metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
+      } catch (error) {
+        throw new Error(
+          `Invalid JSON in sites/${slug}/site.json: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+      }
+
+      return {
+        kind: 'notes',
+        slug,
+        url: `/notes/${slug}/`,
+        title: metadata.title || slug,
+        summary: metadata.summary || '',
+        date: normalizeDate(metadata.date),
+        draft: parseDraft(metadata.draft),
+      }
+    })
+    .filter((entry) => entry && !entry.draft)
 }
 
 function writeFile(fileName, content) {
@@ -54,7 +119,7 @@ function buildSitemap(entries) {
     { url: '/notes', priority: '0.9' },
     { url: '/demos', priority: '0.6' },
     ...entries.map((entry) => ({
-      url: `/${entry.kind}/${entry.slug}`,
+      url: entry.url,
       lastmod: entry.date,
       priority: entry.kind === 'notes' ? '0.8' : '0.5',
     })),
@@ -88,7 +153,7 @@ function buildFeed(notes) {
     <lastBuildDate>${latestBuildDate}</lastBuildDate>
 ${notes
   .map((note) => {
-    const link = `${SITE_URL}/notes/${note.slug}`
+    const link = `${SITE_URL}${note.url}`
     const pubDate = note.date ? new Date(note.date).toUTCString() : latestBuildDate
 
     return `    <item>
@@ -105,8 +170,8 @@ ${notes
 `
 }
 
-const notes = listEntries('notes')
-const demos = listEntries('demos')
+const notes = sortByDateDesc([...listMarkdownEntries('notes'), ...listHostedSiteEntries()])
+const demos = sortByDateDesc(listMarkdownEntries('demos'))
 const allEntries = [...notes, ...demos]
 
 writeFile(

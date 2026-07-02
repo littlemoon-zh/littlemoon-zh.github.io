@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/generate-site-metadata.js && next build",
+    "build": "node scripts/generate-site-metadata.js && next build && node scripts/build-hosted-sites.js",
     "start": "next start",
     "lint": "eslint .",
     "metadata": "node scripts/generate-site-metadata.js",
     "export": "next build",
     "new:note": "node scripts/new-content.js note",
-    "new:demo": "node scripts/new-content.js demo"
+    "new:demo": "node scripts/new-content.js demo",
+    "new:site": "node scripts/new-content.js site",
+    "hosted-sites": "node scripts/build-hosted-sites.js"
   },
   "dependencies": {
     "@types/node": "^20.19.41",

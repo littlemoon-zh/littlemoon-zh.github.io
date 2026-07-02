@@ -5,6 +5,7 @@ export const site = {
   url: 'https://littlemoon-zh.github.io',
   email: 'yuhangxiaocs@gmail.com',
   github: 'https://github.com/littlemoon-zh',
+  linkedin: 'https://www.linkedin.com/in/yuhang-xiao/',
   description:
     'Littlemoon is Yuhang Xiao’s personal site for hosted research notes and small product demos.',
   chineseDescription:
