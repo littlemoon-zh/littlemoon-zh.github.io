@@ -48,6 +48,18 @@ const title =
     .join(' ')
 
 const today = new Date().toISOString().slice(0, 10)
+const noteLayout = options.layout || (options.artifact ? 'artifact' : 'article')
+const artifactChrome = options['artifact-chrome'] || options.artifactChrome || options.chrome || 'immersive'
+
+if (!['article', 'artifact'].includes(noteLayout)) {
+  console.error('Note layout must be article or artifact')
+  process.exit(1)
+}
+
+if (!['browser', 'immersive', 'custom'].includes(artifactChrome)) {
+  console.error('Artifact chrome must be browser, immersive, or custom')
+  process.exit(1)
+}
 
 const contentDirectory = path.join(
   process.cwd(),
@@ -68,7 +80,8 @@ title: ${title}
 date: ${today}
 summary: Write a short summary for list pages.
 tags: knowledge, notes
-draft: false
+layout: ${noteLayout}
+${noteLayout === 'artifact' ? `artifact: ${options.artifact || ''}\nartifactChrome: ${artifactChrome}\n` : ''}draft: false
 ---
 
 ## Context

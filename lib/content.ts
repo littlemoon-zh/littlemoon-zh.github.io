@@ -2,8 +2,10 @@ import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import { z } from 'zod'
+import type { ArtifactChrome } from '@/lib/artifact-types'
 
 type ContentKind = 'notes' | 'demos'
+type NoteLayout = 'article' | 'artifact'
 
 const CONTENT_ROOT = path.join(process.cwd(), 'content')
 const isProductionBuild = process.env.NODE_ENV === 'production'
@@ -68,6 +70,9 @@ const baseFrontmatterSchema = z.object({
 
 const noteFrontmatterSchema = baseFrontmatterSchema.extend({
   tags: stringArrayField.default([]),
+  layout: z.enum(['article', 'artifact']).default('article'),
+  artifact: z.string().trim().optional().default(''),
+  artifactChrome: z.enum(['browser', 'immersive', 'custom']).optional(),
 })
 
 const demoFrontmatterSchema = baseFrontmatterSchema.extend({
@@ -89,6 +94,9 @@ type ContentFrontmatter = {
 export type NoteMeta = ContentFrontmatter & {
   slug: string
   tags: string[]
+  layout: NoteLayout
+  artifact?: string
+  artifactChrome?: ArtifactChrome
 }
 
 export type DemoMeta = ContentFrontmatter & {
@@ -105,6 +113,15 @@ export type NoteEntry = NoteMeta & {
 export type DemoEntry = DemoMeta & {
   body: string
 }
+
+const portfolioDemoTags = new Set([
+  'portfolio',
+  'personal-work',
+  'video',
+  'video-ai',
+  'video-generation',
+  'creative-ai',
+])
 
 function listContentFiles(kind: ContentKind): string[] {
   const directory = path.join(CONTENT_ROOT, kind)
@@ -177,6 +194,9 @@ function parseNoteRaw(raw: string, slug: string, fileName: string): NoteEntry {
     summary: frontmatter.summary,
     draft: frontmatter.draft,
     tags: frontmatter.tags,
+    layout: frontmatter.layout,
+    ...(frontmatter.artifact ? { artifact: frontmatter.artifact } : {}),
+    ...(frontmatter.artifactChrome ? { artifactChrome: frontmatter.artifactChrome } : {}),
     body: content.trim(),
   }
 }
@@ -224,6 +244,9 @@ export function getAllNotesMeta(): NoteMeta[] {
         summary: entry.summary,
         draft: entry.draft,
         tags: entry.tags,
+        layout: entry.layout,
+        ...(entry.artifact ? { artifact: entry.artifact } : {}),
+        ...(entry.artifactChrome ? { artifactChrome: entry.artifactChrome } : {}),
       }
     })
     .filter((entry): entry is NoteMeta => entry !== null)
@@ -261,12 +284,20 @@ export function getAllDemosMeta(): DemoMeta[] {
   return sortByDateDesc(entries)
 }
 
+export function isPortfolioDemo(entry: Pick<DemoMeta, 'stack'>): boolean {
+  return entry.stack.some((item) => portfolioDemoTags.has(item.toLowerCase()))
+}
+
+export function getPortfolioDemosMeta(): DemoMeta[] {
+  return getAllDemosMeta().filter(isPortfolioDemo)
+}
+
 export function getNoteSlugs(): string[] {
   return getAllNotesMeta().map((entry) => entry.slug)
 }
 
 export function getDemoSlugs(): string[] {
-  return getAllDemosMeta().map((entry) => entry.slug)
+  return getPortfolioDemosMeta().map((entry) => entry.slug)
 }
 
 export function getNoteBySlug(slug: string): NoteEntry | null {
@@ -305,4 +336,8 @@ export function getLatestNotes(limit = 3): NoteMeta[] {
 
 export function getLatestDemos(limit = 3): DemoMeta[] {
   return getAllDemosMeta().slice(0, limit)
+}
+
+export function getLatestPortfolioDemos(limit = 3): DemoMeta[] {
+  return getPortfolioDemosMeta().slice(0, limit)
 }

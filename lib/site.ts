@@ -6,9 +6,9 @@ export const site = {
   email: 'yuhangxiaocs@gmail.com',
   github: 'https://github.com/littlemoon-zh',
   description:
-    'Littlemoon is Yuhang Xiao’s personal notebook for AI engineering, agent systems, evaluation loops, and model internals.',
+    'Littlemoon is Yuhang Xiao’s personal site for hosted research notes and small product demos.',
   chineseDescription:
-    '一个面向 AI 工程实践的个人笔记站：记录 agent 系统、评测闭环、视频 AI 与模型机制中的可复用判断。',
+    '一个个人站点：一部分放可直接访问的研究报告和工程笔记，一部分放视频 AI 与个人作品 demo。',
   image: '/hero-workspace.jpg',
 }
 
