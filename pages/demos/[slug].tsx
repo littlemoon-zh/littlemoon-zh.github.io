@@ -35,6 +35,9 @@ export default function DemoDetailPage({ demo }: DemoDetailPageProps) {
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
             <Link href="/demos">Demos</Link>
+            <a href={site.linkedin} target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
           </nav>
           <ThemeToggle
             containerClassName={styles.themeToggle}

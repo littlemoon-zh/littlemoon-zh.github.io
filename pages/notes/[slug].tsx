@@ -39,11 +39,11 @@ function NoteHead({ note }: NoteDetailPageProps) {
     <Head>
       <title>{`${note.title} | ${site.name}`}</title>
       <meta name="description" content={note.summary} />
-      <link rel="canonical" href={`${site.url}/notes/${note.slug}`} />
+      <link rel="canonical" href={`${site.url}${note.href}`} />
       <meta property="og:title" content={note.title} />
       <meta property="og:description" content={note.summary} />
       <meta property="og:type" content={note.layout === 'artifact' ? 'website' : 'article'} />
-      <meta property="og:url" content={`${site.url}/notes/${note.slug}`} />
+      <meta property="og:url" content={`${site.url}${note.href}`} />
       <meta property="article:published_time" content={note.date} />
     </Head>
   )
@@ -58,6 +58,9 @@ function SiteTopbar() {
       <nav className={styles.nav}>
         <Link href="/notes">Notes</Link>
         <Link href="/demos">Demos</Link>
+        <a href={site.linkedin} target="_blank" rel="noreferrer">
+          LinkedIn
+        </a>
       </nav>
       <ThemeToggle
         containerClassName={styles.themeToggle}
@@ -81,6 +84,9 @@ function ArtifactTopbar({ note }: NoteDetailPageProps) {
       <nav className={styles.nav}>
         <Link href="/notes">Notes</Link>
         <Link href="/demos">Demos</Link>
+        <a href={site.linkedin} target="_blank" rel="noreferrer">
+          LinkedIn
+        </a>
       </nav>
       <ThemeToggle
         containerClassName={styles.themeToggle}
@@ -293,6 +299,8 @@ export const getStaticProps: GetStaticProps<NoteDetailPageProps> = async ({ para
     props: {
       note: {
         slug: note.slug,
+        href: note.href,
+        source: note.source,
         title: note.title,
         date: note.date,
         summary: note.summary,

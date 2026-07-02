@@ -12,6 +12,52 @@ type NotesPageProps = {
   notes: NoteMeta[]
 }
 
+function noteTypeLabel(note: NoteMeta): string {
+  if (note.layout === 'site' || note.layout === 'artifact') {
+    return 'Hosted HTML'
+  }
+
+  return 'Note'
+}
+
+function NoteCard({ note }: { note: NoteMeta }) {
+  const content = (
+    <>
+      <p className={styles.meta}>
+        {formatDate(note.date)} / {noteTypeLabel(note)}
+      </p>
+      <h2>{note.title}</h2>
+      <p>{note.summary}</p>
+      {note.tags.length > 0 && (
+        <div className={styles.tags}>
+          {note.tags.map((tag) => (
+            <span key={tag} className={styles.tag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+      <span className={styles.cardLink}>
+        {note.layout === 'article' ? 'Read' : 'Open'}
+      </span>
+    </>
+  )
+
+  if (note.source === 'site') {
+    return (
+      <a href={note.href} className={styles.card}>
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={note.href} className={styles.card}>
+      {content}
+    </Link>
+  )
+}
+
 export default function NotesPage({ notes }: NotesPageProps) {
   const [view, setView] = useStoredView('littlemoon:notes:view')
 
@@ -36,6 +82,9 @@ export default function NotesPage({ notes }: NotesPageProps) {
           <nav className={styles.nav}>
             <Link href="/notes">Notes</Link>
             <Link href="/demos">Demos</Link>
+            <a href={site.linkedin} target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
           </nav>
           <ThemeToggle
             containerClassName={styles.themeToggle}
@@ -76,23 +125,7 @@ export default function NotesPage({ notes }: NotesPageProps) {
           {notes.length > 0 ? (
             <section className={`${styles.grid} ${view === 'rows' ? styles.rows : ''}`}>
               {notes.map((note) => (
-                <Link key={note.slug} href={`/notes/${note.slug}`} className={styles.card}>
-                  <p className={styles.meta}>
-                    {formatDate(note.date)} / {note.layout === 'artifact' ? 'Hosted HTML' : 'Note'}
-                  </p>
-                  <h2>{note.title}</h2>
-                  <p>{note.summary}</p>
-                  {note.tags.length > 0 && (
-                    <div className={styles.tags}>
-                      {note.tags.map((tag) => (
-                        <span key={tag} className={styles.tag}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <span className={styles.cardLink}>{note.layout === 'artifact' ? 'Open' : 'Read'}</span>
-                </Link>
+                <NoteCard key={note.href} note={note} />
               ))}
             </section>
           ) : (

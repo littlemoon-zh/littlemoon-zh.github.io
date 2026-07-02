@@ -5,7 +5,9 @@ import { z } from 'zod'
 import type { ArtifactChrome } from '@/lib/artifact-types'
 
 type ContentKind = 'notes' | 'demos'
-type NoteLayout = 'article' | 'artifact'
+type NoteLayout = 'article' | 'artifact' | 'site'
+type NoteSource = 'mdx' | 'site'
+type HostedSiteChrome = 'site' | 'none'
 
 const CONTENT_ROOT = path.join(process.cwd(), 'content')
 const isProductionBuild = process.env.NODE_ENV === 'production'
@@ -81,8 +83,15 @@ const demoFrontmatterSchema = baseFrontmatterSchema.extend({
   repoUrl: optionalUrlField,
 })
 
+const hostedSiteMetadataSchema = baseFrontmatterSchema.extend({
+  title: z.string().trim().min(1),
+  tags: stringArrayField.default([]),
+  chrome: z.enum(['site', 'none']).default('site'),
+})
+
 type NoteFrontmatter = z.infer<typeof noteFrontmatterSchema>
 type DemoFrontmatter = z.infer<typeof demoFrontmatterSchema>
+type HostedSiteMetadata = z.infer<typeof hostedSiteMetadataSchema>
 
 type ContentFrontmatter = {
   title: string
@@ -93,10 +102,13 @@ type ContentFrontmatter = {
 
 export type NoteMeta = ContentFrontmatter & {
   slug: string
+  href: string
+  source: NoteSource
   tags: string[]
   layout: NoteLayout
   artifact?: string
   artifactChrome?: ArtifactChrome
+  chrome?: HostedSiteChrome
 }
 
 export type DemoMeta = ContentFrontmatter & {
@@ -151,6 +163,52 @@ function readRawFile(kind: ContentKind, slug: string): string | null {
   return null
 }
 
+function listHostedSiteSlugs(): string[] {
+  const directory = path.join(CONTENT_ROOT, 'sites')
+
+  if (!fs.existsSync(directory)) {
+    return []
+  }
+
+  return fs
+    .readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => {
+      if (!entry.isDirectory()) {
+        return false
+      }
+
+      const siteDirectory = path.join(directory, entry.name)
+      return (
+        fs.existsSync(path.join(siteDirectory, 'index.html')) &&
+        fs.existsSync(path.join(siteDirectory, 'site.json'))
+      )
+    })
+    .map((entry) => entry.name)
+}
+
+function readHostedSiteMetadata(slug: string): HostedSiteMetadata {
+  const metadataPath = path.join(CONTENT_ROOT, 'sites', slug, 'site.json')
+  let data: unknown
+
+  try {
+    data = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
+  } catch (error) {
+    throw new Error(
+      `Invalid JSON in sites/${slug}/site.json: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    )
+  }
+
+  const parsed = hostedSiteMetadataSchema.safeParse(data)
+
+  if (!parsed.success) {
+    throw new Error(`Invalid metadata in sites/${slug}/site.json: ${parsed.error.message}`)
+  }
+
+  return parsed.data
+}
+
 function fileNameToSlug(fileName: string): string {
   return fileName.replace(/\.mdx?$/, '')
 }
@@ -189,6 +247,8 @@ function parseNoteRaw(raw: string, slug: string, fileName: string): NoteEntry {
   const frontmatter: NoteFrontmatter = parsed.data
   return {
     slug,
+    href: `/notes/${slug}`,
+    source: 'mdx',
     title: frontmatter.title || slugToTitle(slug),
     date: frontmatter.date,
     summary: frontmatter.summary,
@@ -198,6 +258,23 @@ function parseNoteRaw(raw: string, slug: string, fileName: string): NoteEntry {
     ...(frontmatter.artifact ? { artifact: frontmatter.artifact } : {}),
     ...(frontmatter.artifactChrome ? { artifactChrome: frontmatter.artifactChrome } : {}),
     body: content.trim(),
+  }
+}
+
+function parseHostedSite(slug: string): NoteMeta {
+  const metadata = readHostedSiteMetadata(slug)
+
+  return {
+    slug,
+    href: `/notes/${slug}/`,
+    source: 'site',
+    title: metadata.title,
+    date: metadata.date,
+    summary: metadata.summary,
+    draft: metadata.draft,
+    tags: metadata.tags,
+    layout: 'site',
+    chrome: metadata.chrome,
   }
 }
 
@@ -223,8 +300,8 @@ function parseDemoRaw(raw: string, slug: string, fileName: string): DemoEntry {
   }
 }
 
-export function getAllNotesMeta(): NoteMeta[] {
-  const entries = listContentFiles('notes')
+function getMarkdownNotesMeta(): NoteMeta[] {
+  return listContentFiles('notes')
     .map<NoteMeta | null>((fileName) => {
       const slug = fileNameToSlug(fileName)
       const raw = readRawFile('notes', slug)
@@ -239,6 +316,8 @@ export function getAllNotesMeta(): NoteMeta[] {
 
       return {
         slug: entry.slug,
+        href: entry.href,
+        source: entry.source,
         title: entry.title,
         date: entry.date,
         summary: entry.summary,
@@ -250,6 +329,23 @@ export function getAllNotesMeta(): NoteMeta[] {
       }
     })
     .filter((entry): entry is NoteMeta => entry !== null)
+}
+
+function getHostedSitesMeta(): NoteMeta[] {
+  return listHostedSiteSlugs()
+    .map<NoteMeta | null>((slug) => {
+      const entry = parseHostedSite(slug)
+      if (!shouldShowEntry(entry.draft)) {
+        return null
+      }
+
+      return entry
+    })
+    .filter((entry): entry is NoteMeta => entry !== null)
+}
+
+export function getAllNotesMeta(): NoteMeta[] {
+  const entries = [...getMarkdownNotesMeta(), ...getHostedSitesMeta()]
 
   return sortByDateDesc(entries)
 }
@@ -293,7 +389,7 @@ export function getPortfolioDemosMeta(): DemoMeta[] {
 }
 
 export function getNoteSlugs(): string[] {
-  return getAllNotesMeta().map((entry) => entry.slug)
+  return getMarkdownNotesMeta().map((entry) => entry.slug)
 }
 
 export function getDemoSlugs(): string[] {
