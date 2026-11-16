@@ -1,0 +1,511 @@
+---
+title: 从日志到 Durable Execution
+date: 2026-07-20
+summary: 这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。
+tags: distributed-systems, durable-execution, temporal
+layout: article
+draft: false
+---
+
+一个跨服务、跨故障、跨部署、可能运行数月的程序，如何不依赖某个进程的内存，仍然知道发生过什么、恢复到正确状态，并继续完成剩余工作？
+
+回答这个问题需要五件事：Durable record、Deterministic replay、Reliable delivery、Idempotent effects、Compatible evolution。
+
+## 可靠执行的共同公式
+
+数据库、Event Sourcing、消息系统、流计算、区块链和 Temporal 看起来不同，但它们反复使用同一组原则。
+
+这些系统的差别，主要在于要恢复的对象不同；相同之处，是都把易失状态转化为可以持久化、排序和重新解释的记录。
+
+```text
+易失的运行状态
+  → 持久、排序、可解释的记录
+  → 确定性重建派生状态
+  → 重新派发未完成工作
+  → 幂等、去重或补偿
+  → Checkpoint 与兼容演进
+```
+
+| 系统 | 保护对象 | 持久化记录 | 恢复目标 |
+| --- | --- | --- | --- |
+| 数据库 WAL | 数据页与事务状态 | Redo / Undo / Commit Log | Crash 后恢复一致数据库 |
+| Event Sourcing | 业务事实与 Aggregate | Domain Event Stream | 重建状态与 Projection |
+| Raft | 多副本服务状态 | 共识排序的 Command Log | 副本得到相同状态 |
+| 消息系统 | 尚未完成的工作 | Message / Offset / Ack | 重新投递并继续消费 |
+| 流计算 | 消费位置与计算状态 | Offset / Checkpoint / Snapshot | 从一致位置恢复计算 |
+| 区块链 | 多方认可的状态转换 | 交易与区块 | 重建链上状态 |
+| Temporal | 跨服务程序的执行状态 | Workflow Event History | 重建控制流并继续执行 |
+
+## 任何 Durable System 都要回答五个问题
+
+下面八类成熟思想，本质上都在回答这些问题。
+
+1. **Source of truth 是什么？** 当前内存、数据库行，还是追加式历史？
+2. **何时算 committed？** 系统确认成功前，什么必须已经持久化？
+3. **故障后如何恢复？** 加载 Snapshot、Replay 日志，还是重新投递任务？
+4. **副作用如何处理？** 外部操作成功但确认丢失时，如何避免重复或遗漏？
+5. **如何兼容演进？** 新代码还能否解释旧记录与在途流程？
+
+## 01 · Write-Ahead Log
+
+**先记录，再承诺。**
+
+```text
+ScheduleActivity
+  → ActivityTaskScheduled durable
+  → Worker 执行
+  → ActivityTaskCompleted durable
+  → Workflow 继续
+```
+
+#### 基本原则
+
+在系统宣布修改 committed 之前，必须先持久化足够的恢复信息。
+
+数据库先落 WAL 与 Commit Record，数据页可以稍后刷盘；Crash 后从最近 Checkpoint 向前 REDO。
+
+#### 解决什么
+
+- 已确认的修改不会因 Crash 丢失
+- 明确 Commit Boundary
+- 恢复不依赖易失内存
+
+#### 代价与边界
+
+- 日志必须高可用、严格排序、可校验
+- Checkpoint、清理与存储增长成为长期运维问题
+- 无法自动覆盖第三方 API 的事务边界
+
+#### Temporal 如何实践
+
+Temporal 在 Activity 执行前持久化 Schedule Command、Event 与内部 Task；完成后再持久化 Result。
+
+Worker 死亡不等于工作消失，但支付、LLM、GCS 的副作用无法与 ActivityCompleted 原子提交。
+
+## 02 · Event Sourcing
+
+**状态是历史的 Projection。**
+
+```text
+Workflow Started
+  → Activity Completed
+  → Timer Fired
+  → Signal Received
+  → Replay
+  → Memory State
+```
+
+#### 基本原则
+
+Event Log 是 Source of Truth；Aggregate State 是事件经过状态转换函数归约后的结果。
+
+Projection 服务查询，Snapshot 加速恢复，Checkpoint 记录消费者处理到哪里。
+
+#### 解决什么
+
+- 完整审计与因果解释
+- 恢复任意时间点状态
+- 从同一事实流重建不同视图
+
+#### 代价与边界
+
+- Event Schema 必须长期兼容
+- Projection 往往最终一致
+- 错误事实通常靠补偿事件修正
+
+#### Temporal 如何实践
+
+Temporal History 是 execution-layer event sourcing：Workflow 内存状态由 Event History + Workflow Code Replay 得到。
+
+ActivityTaskCompleted 描述执行；PaymentCaptured 描述业务世界。Execution Event 不能替代 Domain Event Store。
+
+## 03 · Deterministic State Machine
+
+**相同历史，得到相同决策。**
+
+#### 基本原则
+
+状态机可写成 `(New State, Commands) = F(Current State, Input)`。
+
+只要初始状态、输入顺序和转移函数相同，就能重建相同状态与命令。
+
+#### 解决什么
+
+- 故障后重建控制流
+- 让多个执行者对同一历史得出相同结论
+- 把恢复从猜测变成可验证的重放
+
+#### 代价与边界
+
+- 真实时间、随机数和外部 I/O 不能直接影响确定性路径
+- 并发顺序与代码升级可能改变 Commands
+- 需要 Replay Test
+
+#### Temporal 如何实践
+
+Workflow 是确定性状态机；SDK Replay History 并把已有 Activity、Timer、Signal 结果注入代码。
+
+新 Command 与旧 Event 不匹配时产生 Non-Determinism Error，因此 Workflow 与 Activity 必须分离。
+
+## 04 · Reliable Delivery
+
+**工作属于系统，不属于消费者。**
+
+#### 基本原则
+
+工作先持久化，Consumer 只是暂时执行者；失败、超时或消费者消失后可以重新投递。
+
+Offset、Ack、Lease、Partition 与 Backpressure 一起决定投递语义和系统稳定性。
+
+#### 解决什么
+
+- 生产者与消费者解耦
+- Worker 滚动部署
+- 资源隔离和独立扩缩容
+
+#### 代价与边界
+
+- At-least-once 可能重复
+- 容量不足会形成 Backlog
+- 路由和分区策略需要设计
+
+#### Temporal 如何实践
+
+Task Queue 是 Workflow/Activity Task 与 Worker 的路由、负载均衡和资源隔离边界。
+
+Temporal 不只是 Queue：它同时保存产生这些任务的长期控制流。
+
+## 05 · At-least-once + Idempotency
+
+**不确定窗口无法消失。**
+
+```text
+副作用成功
+  → 确认前崩溃
+  → Temporal 未见完成
+  → Timeout
+  → Retry
+  → 幂等 / 去重
+```
+
+#### 基本原则
+
+外部操作可能已经成功，但调用方在收到确认前崩溃。网络超时意味着不知道结果，不意味着对方没有执行。
+
+重试可能重复，不重试可能遗漏；Exactly-once business effect 需要应用层协作。
+
+#### 解决什么
+
+- 故障后继续尝试
+- 避免因短暂网络错误丢失关键动作
+- 把不确定性收敛到可治理的业务语义
+
+#### 代价与边界
+
+- 需要 Idempotency Key、唯一约束或 Dedup Table
+- 不可逆副作用要保留补偿与对账
+- 可重试错误必须分类
+
+#### Temporal 如何实践
+
+Activity 默认按可能重复执行设计。可用 `workflowId`/`activityId` 生成幂等键，对扣费、创建记录、上传使用唯一约束。
+
+Temporal 负责可靠重试；业务层负责让重试安全。
+
+## 06 · Process Manager / Saga
+
+**长事务必须显式编排。**
+
+#### 基本原则
+
+跨服务、跨小时或等待用户的流程不能长期持有数据库锁。
+
+Saga 把长事务拆成本地事务，显式记录阶段，并为每一步定义失败、超时、重试和语义补偿。
+
+#### 解决什么
+
+- 跨服务长事务
+- 人工审批与异步等待
+- 显式取消和补偿
+
+#### 代价与边界
+
+- 补偿不等于数据库 Rollback
+- 业务必须定义哪些事实可逆
+- 失败路径与正常路径同样需要建模
+
+#### Temporal 如何实践
+
+Workflow 直接表达阶段、Durable Timer、Signal、Update、Child Workflow、Cancellation 和 Compensation。
+
+等待几天不占住线程；状态机停在一个由 History 描述、可恢复的条件上。
+
+## 07 · Checkpoint & Compaction
+
+**历史不能无限增长。**
+
+#### 基本原则
+
+依赖日志恢复的系统必须控制恢复成本：Checkpoint 确认位置，Snapshot 保存派生状态，Compaction/Retention 控制历史。
+
+数据库从 Checkpoint 后重放 WAL；Event Sourcing 从 Snapshot 后重放事件；流计算从 State Snapshot 与 Offset 恢复。
+
+#### 解决什么
+
+- 缩短恢复时间
+- 控制日志体积
+- 长任务从部分进度继续
+
+#### 代价与边界
+
+- 必须选择正确的最小恢复状态
+- 压缩可能丢失调试细节
+- Retention 需要容量与合规权衡
+
+#### Temporal 如何实践
+
+Activity Heartbeat Details 保存长任务进度；Retry 可以从 Checkpoint 继续。
+
+Continue-As-New 用压缩状态创建新 Run 和新 History，但保持同一 Workflow Chain。
+
+## 08 · Compatible Evolution
+
+**持久历史意味着兼容责任。**
+
+#### 基本原则
+
+历史往往比代码版本活得更久。日志型系统必须处理 Schema Evolution、Rolling Upgrade 与新旧消费者并存。
+
+追加式历史不可变，不代表程序可以随便改变对历史的解释。
+
+#### 解决什么
+
+- 在途流程跨版本运行
+- 滚动升级不中断业务
+- 旧历史仍可解释
+
+#### 代价与边界
+
+- 长期维护兼容分支
+- 需要真实历史 Replay Test
+- 迁移与 Drain Window 必须显式规划
+
+#### Temporal 如何实践
+
+Patching、Worker Versioning 与 Replay Test 让新旧 Workflow 并存。Activity 新增、删除、改名或重排都可能导致 NDE。
+
+典型路径是 `patched(change-id)` → drain → `deprecatePatch(change-id)` → 清理旧分支。
+
+## Temporal 如何把成熟思想组合成 Runtime
+
+Temporal 的核心不是某一个全新发明，而是把可靠系统的成熟原则组合成一个以代码为界面的执行环境。
+
+| 成熟思想 | Temporal 机制 | 解决的问题 | 开发者仍需负责 |
+| --- | --- | --- | --- |
+| Durable Log | History / Mutable State / Task | 进度不依赖 Worker | Persistence HA 与 Retention |
+| Event Sourcing | History + Replay | 重建 Workflow State | 区分执行事件与业务事实 |
+| 状态机 | Workflow Sandbox | 恢复相同控制流 | 保持 Determinism |
+| Reliable Delivery | Task Queue / Polling | 重新派发工作 | 路由与 Capacity |
+| At-least-once | Retry / Timeout | 故障后继续 | 幂等、去重、唯一约束 |
+| Saga | Workflow / Child / Compensation | 跨服务长事务 | 定义业务补偿 |
+| Durable Input | Timer / Signal / Update | 长期等待 | 顺序与状态校验 |
+| Checkpoint | Heartbeat Details | 长 Activity 部分恢复 | 定义可恢复进度 |
+| Compaction | Continue-As-New | 控制 History | 传递必要状态 |
+| Evolution | Patching / Versioning / Replay | 新旧流程并存 | 不破坏旧 History |
+
+```text
+持久化事实与意图
+  → 确定性重建控制流
+  → 派发未完成工作
+  → 执行外部副作用
+  → Retry + Idempotency
+  → Checkpoint
+  → Compatible Evolution
+```
+
+### 组件只是原则的载体
+
+把术语放回思想谱系，Temporal 的组件就变得容易理解。
+
+| 组件 | 在思想谱系里的位置 |
+| --- | --- |
+| Temporal Service | Durable Log、状态机推进与任务持久化 |
+| Client | 启动流程并发送外部输入 |
+| Workflow | 确定性 Process Manager |
+| Activity | 非确定性副作用边界 |
+| Worker | 可替换的计算资源 |
+| Task Queue | 可靠投递、路由与资源隔离 |
+| Namespace | 生命周期、访问与 Retention 边界 |
+| Visibility | 搜索与运维的 Projection |
+
+一次执行的路径：
+
+1. Client 启动 Workflow
+2. Service 持久化 Workflow Started
+3. Worker Replay History 并生成 Commands
+4. Commands 变成持久 Events 与 Tasks
+5. Activity Worker 执行外部副作用
+6. Service 持久化 Activity Result
+7. Workflow 再次 Replay 并推进下一步
+
+## Temporal 没有解决什么
+
+把 Temporal 放回基本原则中，也能看清它的能力边界。
+
+1. 不替代业务数据库与 Domain Event Store
+2. 不自动实现外部副作用 Exactly-once
+3. 不让不可逆操作自动 Rollback
+4. 不替代模型、Planner、工具或 Agent 的智能
+5. 不保证第三方服务可用
+6. 不自动保证新 Workflow 代码兼容旧 History
+7. 不消除 Capacity、Backpressure、Hot Queue 或数据库瓶颈
+8. 不让所有异步任务都值得升级为 Durable Workflow
+
+> 它的价值是可靠地保存和恢复“程序如何继续”，不是替业务做所有正确性决策。
+
+## Agent Opus：这些原则的具体实践
+
+Temporal 在 Agent Opus 中不是后台任务队列，而是 Story Mode、UIP、Screenplay、编辑与渲染长流程的持久化控制面。
+
+### Screenplay：Human-in-the-loop Process Manager
+
+```text
+world
+  → idea: generate / refine / lock
+  → script: generate / revise / approve
+  → assets
+  → render clips
+  → stitch / output
+```
+
+| Principle | Agent Opus |
+| --- | --- |
+| Durable State | Project 进度由 Workflow History 持久化 |
+| Deterministic Control | Workflow 只负责阶段、分支与等待 |
+| Side-effect Isolation | LLM、GCS、模型、DB、ffmpeg 放入 Activity |
+| Durable Input | 用户 Approve / Refine / Cancel 通过 Signal |
+| Reliable Retry | 生成与渲染 Activity 配置 Timeout / Retry |
+| Checkpoint | 长渲染通过 Heartbeat 报告进度 |
+| Idempotency | Credits、创建记录、上传需要业务去重 |
+| Evolution | Activity 顺序变化通过 `patched()` |
+
+### UIP：更动态的 Durable Agent Runtime
+
+- 主 Workflow 等待用户、工具与系统事件
+- Planner 每次推进一步
+- 工具调用可拆为 Child Workflow
+- Query 暴露事件与 active tools
+- 长 Session 通过 Continue-As-New 更新 History
+
+Temporal 解决的是 Agent Runtime 不因进程或部署消失，而不是 Agent 如何变聪明。智能仍来自模型、上下文、工具、验证器与反馈循环。
+
+### Task Queue：资源隔离
+
+`Main` · `UIP` · `Image API` · `Video API` · `Brand Extraction` · `Admission`
+
+### Repository 的 Replay 纪律
+
+- Local Activity 不进入 `Promise.all`，也不与 Regular Activity 混合并发
+- Activity 新增、删除、重排或改名必须考虑 `patched()`
+- Workflow 不直接读取真实时间、随机数、网络、数据库、文件或进程全局状态
+- 发布前使用真实 History 做 Replay Test
+- 部署不会天然丢 Workflow，但新代码可能无法 Replay 旧 History
+
+## 可靠原则最终落到存储层
+
+“History 比 Worker 可靠”的前提，是 Temporal Persistence 真正具备更高的可用性、容量和恢复能力。
+
+Temporal 高频写入 Mutable State、Event History、Workflow/Activity Task、Timer、Transfer Task 与 Visibility。
+
+```text
+频繁 UPDATE / DELETE
+  → Dead tuples 与索引膨胀
+  → Autovacuum 与前台事务争抢 I/O / CPU
+  → Persistence p99 上升
+  → 清理更跟不上
+```
+
+### AlloyDB 带来的基础层收益
+
+- 托管 HA、备份、PITR 与升级
+- Compute / Storage 分离
+- 存储自动扩容
+- 更稳定的写入吞吐
+- Adaptive Autovacuum
+
+### 它仍然不解决
+
+- Workflow History 过大
+- Retention 太长或 Payload 太大
+- Worker Capacity 不足
+- Activity 不幂等
+- 代码版本不兼容
+
+## 什么时候值得引入这种编程模型
+
+### 适合
+
+- 流程跨分钟、小时、天或等待用户
+- 多步骤失败恢复复杂
+- 部署不能让流程消失
+- 需要 Retry、Heartbeat、Cancel、Compensation
+- Agent 调用多个工具并需要持久状态
+- 需要解释执行为何到达当前状态
+
+### 不适合
+
+- 单个短请求失败后直接重试即可
+- 普通 Queue / Cron 已经足够
+- 只需保存当前状态，不需恢复控制流
+- 团队无法承担 Determinism、Idempotency、版本兼容与 Persistence 运维
+
+一条简单的划分：
+
+- 决定下一步做什么、等待什么 → Workflow
+- 访问外部世界并产生副作用 → Activity
+
+## 从基本原则出发的调试顺序
+
+1. Source of truth 是 History 还是业务 Projection？
+2. 最后一个 committed Event 是什么？
+3. 下一条 Command 为什么没有产生或完成？
+4. Task 是否送到正确 Task Queue？
+5. Worker 是否在线、容量是否足够、Activity 是否注册？
+6. Activity 是业务失败、Timeout、Heartbeat 丢失还是 Retry？
+7. 副作用是否可能已经成功，但完成记录丢失？
+8. 是否需要幂等、对账或补偿？
+9. 新代码是否与旧 History 产生 NDE？
+10. History 是否应该 Continue-As-New？
+11. Persistence latency、lock、vacuum、连接池是否异常？
+
+## 卖的不是思想，而是承担可靠性责任
+
+Temporal 的核心 Workflow 能力在 Self-hosted 版本中基本完整。Temporal Cloud 主要把成熟思想背后的运维责任产品化。
+
+商业价值不是解锁高级 Workflow API，而是替客户承担一个已经进入关键业务路径的有状态系统。
+
+- Durable Log 的 HA、备份与扩容
+- Schema Migration 与 Server Upgrade
+- 跨区灾备与 SLA
+- Retention、Visibility 与 Capacity
+- 安全治理、审计与专家支持
+
+**研究快照 / 2026.07.20**
+
+- 2025 ARR > USD 100M（公开报道）
+- 2025.03：2,500+ Cloud 客户，NDR 184%
+- 2026.02：Series D USD 300M，估值 USD 5B
+
+## 来源与延伸阅读
+
+以下材料提供了本文使用的系统设计与 Temporal 背景。
+
+- [PostgreSQL · Write-Ahead Log](https://www.postgresql.org/docs/current/wal-intro.html)
+- [Martin Fowler · Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+- [Temporal · Workflows](https://docs.temporal.io/workflows)
+- [Temporal · Event History](https://docs.temporal.io/encyclopedia/event-history)
+- [Temporal · Activities](https://docs.temporal.io/activities)
+- [Temporal · Task Queues](https://docs.temporal.io/task-queue)
+- [Temporal · Versioning](https://docs.temporal.io/workflow-execution/versioning)
+- [Google Cloud · AlloyDB](https://cloud.google.com/alloydb/docs/overview)
+- [Temporal Cloud](https://temporal.io/cloud)
