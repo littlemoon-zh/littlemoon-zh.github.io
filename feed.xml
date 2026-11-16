@@ -5,7 +5,14 @@
     <link>https://littlemoon-zh.github.io/notes</link>
     <description>AI engineering notes by Yuhang Xiao.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Thu, 02 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 20 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>从日志到 Durable Execution</title>
+      <link>https://littlemoon-zh.github.io/notes/from-logs-to-durable-execution</link>
+      <guid>https://littlemoon-zh.github.io/notes/from-logs-to-durable-execution</guid>
+      <pubDate>Mon, 20 Jul 2026 00:00:00 GMT</pubDate>
+      <description>这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。</description>
+    </item>
     <item>
       <title>20 家主流机构最近三年 13F 持仓波动观察</title>
       <link>https://littlemoon-zh.github.io/notes/2026-07-02-13f-institutional-holdings-volatility</link>

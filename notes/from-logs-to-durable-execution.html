@@ -1,0 +1,560 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width, initial-scale=1" data-next-head=""/><title data-next-head="">从日志到 Durable Execution | Littlemoon</title><meta name="description" content="这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。" data-next-head=""/><link rel="canonical" href="https://littlemoon-zh.github.io/notes/from-logs-to-durable-execution" data-next-head=""/><meta property="og:title" content="从日志到 Durable Execution" data-next-head=""/><meta property="og:description" content="这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。" data-next-head=""/><meta property="og:type" content="article" data-next-head=""/><meta property="og:url" content="https://littlemoon-zh.github.io/notes/from-logs-to-durable-execution" data-next-head=""/><meta property="article:published_time" content="2026-07-20" data-next-head=""/><meta name="theme-color" content="#f6f5f0" media="(prefers-color-scheme: light)"/><meta name="theme-color" content="#0d1017" media="(prefers-color-scheme: dark)"/><link rel="icon" href="/favicon.ico" sizes="any"/><link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/><link rel="alternate" type="application/rss+xml" title="Littlemoon" href="/feed.xml"/><link data-next-font="" rel="preconnect" href="/" crossorigin="anonymous"/><link rel="preload" href="/_next/static/chunks/29zjghqo7qbac.css" as="style"/><link rel="preload" href="/_next/static/chunks/0c6_c00-n17n3.css" as="style"/><script>(function(){try{var m=localStorage.getItem('littlemoon:theme-mode');if(m==='light'||m==='dark'){var r=document.documentElement;r.setAttribute('data-theme',m);r.style.colorScheme=m}}catch(e){}})()</script><link rel="stylesheet" href="/_next/static/chunks/29zjghqo7qbac.css" data-n-g=""/><link rel="stylesheet" href="/_next/static/chunks/0c6_c00-n17n3.css" data-n-p=""/><noscript data-n-css=""></noscript><script src="/_next/static/chunks/20lhgf-wb2sgp.js" defer=""></script><script src="/_next/static/chunks/2h6is0nprh5wj.js" defer=""></script><script src="/_next/static/chunks/0xxaasble_dno.js" defer=""></script><script src="/_next/static/chunks/turbopack-087rk1zkqb3rr.js" defer=""></script><script src="/_next/static/chunks/1tm1dx6z8m_cf.js" defer=""></script><script src="/_next/static/chunks/3pvgw5s9p3hwj.js" defer=""></script><script src="/_next/static/chunks/44emqby111knt.js" defer=""></script><script src="/_next/static/chunks/turbopack-1ci1wz84ayi1v.js" defer=""></script><script src="/_next/static/pJkIjlefRC651m5PqrGjM/_buildManifest.js" defer=""></script><script src="/_next/static/pJkIjlefRC651m5PqrGjM/_ssgManifest.js" defer=""></script><script src="/_next/static/pJkIjlefRC651m5PqrGjM/_clientMiddlewareManifest.js" defer=""></script></head><body><div id="__next"><div class="Site-module__a1fuAW__page "><header class="Site-module__a1fuAW__container Site-module__a1fuAW__header"><a class="Site-module__a1fuAW__brand" href="/"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--moon-shadow)"></circle><circle cx="12" cy="12" r="11" fill="none" stroke="var(--moon-rim)" stroke-width="1.5" vector-effect="non-scaling-stroke"></circle></svg><span>Littlemoon</span></a><nav class="Site-module__a1fuAW__nav" aria-label="Primary"><a aria-current="page" href="/notes">Notes</a><a href="/demos">Demos</a><a href="https://github.com/littlemoon-zh" target="_blank" rel="noreferrer" class="Site-module__a1fuAW__navExternal">GitHub</a><button type="button" class="Site-module__a1fuAW__themeToggle" aria-label="Switch to dark theme" title="Switch to dark theme"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"></path></svg></button></nav></header><main class="Site-module__a1fuAW__container Site-module__a1fuAW__main"><article class="Site-module__a1fuAW__grid Site-module__a1fuAW__stack"><div class="Site-module__a1fuAW__gutter Article-module__KK9pta__margin"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--moon-shadow)"></circle><path d="M12,1.00A11,11 0 0 1 12,23.00A3.84,11 0 0 0 12,1.00Z" fill="var(--moon-lit)"></path><circle cx="12" cy="12" r="11" fill="none" stroke="var(--moon-rim)" stroke-width="1.5" vector-effect="non-scaling-stroke"></circle></svg><time dateTime="2026-07-20">2026.07.20</time><span>Waxing crescent</span></div><div class="Site-module__a1fuAW__body"><header class="Article-module__KK9pta__head"><h1 class="Article-module__KK9pta__title">从日志到 Durable Execution</h1><p class="Article-module__KK9pta__summary">这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。</p><ul class="Article-module__KK9pta__tags"><li><a href="/notes?tag=distributed-systems">#<!-- -->distributed-systems</a></li><li><a href="/notes?tag=durable-execution">#<!-- -->durable-execution</a></li><li><a href="/notes?tag=temporal">#<!-- -->temporal</a></li></ul></header><section class="Article-module__KK9pta__prose"><p>一个跨服务、跨故障、跨部署、可能运行数月的程序，如何不依赖某个进程的内存，仍然知道发生过什么、恢复到正确状态，并继续完成剩余工作？</p>
+<p>回答这个问题需要五件事：Durable record、Deterministic replay、Reliable delivery、Idempotent effects、Compatible evolution。</p>
+<h2 id="可靠执行的共同公式">可靠执行的共同公式<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#可靠执行的共同公式">#</a></h2>
+<p>数据库、Event Sourcing、消息系统、流计算、区块链和 Temporal 看起来不同，但它们反复使用同一组原则。</p>
+<p>这些系统的差别，主要在于要恢复的对象不同；相同之处，是都把易失状态转化为可以持久化、排序和重新解释的记录。</p>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>易失的运行状态</span></span>
+<span data-line=""><span>  → 持久、排序、可解释的记录</span></span>
+<span data-line=""><span>  → 确定性重建派生状态</span></span>
+<span data-line=""><span>  → 重新派发未完成工作</span></span>
+<span data-line=""><span>  → 幂等、去重或补偿</span></span>
+<span data-line=""><span>  → Checkpoint 与兼容演进</span></span></code></pre></figure>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>保护对象</th>
+<th>持久化记录</th>
+<th>恢复目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据库 WAL</td>
+<td>数据页与事务状态</td>
+<td>Redo / Undo / Commit Log</td>
+<td>Crash 后恢复一致数据库</td>
+</tr>
+<tr>
+<td>Event Sourcing</td>
+<td>业务事实与 Aggregate</td>
+<td>Domain Event Stream</td>
+<td>重建状态与 Projection</td>
+</tr>
+<tr>
+<td>Raft</td>
+<td>多副本服务状态</td>
+<td>共识排序的 Command Log</td>
+<td>副本得到相同状态</td>
+</tr>
+<tr>
+<td>消息系统</td>
+<td>尚未完成的工作</td>
+<td>Message / Offset / Ack</td>
+<td>重新投递并继续消费</td>
+</tr>
+<tr>
+<td>流计算</td>
+<td>消费位置与计算状态</td>
+<td>Offset / Checkpoint / Snapshot</td>
+<td>从一致位置恢复计算</td>
+</tr>
+<tr>
+<td>区块链</td>
+<td>多方认可的状态转换</td>
+<td>交易与区块</td>
+<td>重建链上状态</td>
+</tr>
+<tr>
+<td>Temporal</td>
+<td>跨服务程序的执行状态</td>
+<td>Workflow Event History</td>
+<td>重建控制流并继续执行</td>
+</tr>
+</tbody>
+</table>
+<h2 id="任何-durable-system-都要回答五个问题">任何 Durable System 都要回答五个问题<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#任何-durable-system-都要回答五个问题">#</a></h2>
+<p>下面八类成熟思想，本质上都在回答这些问题。</p>
+<ol>
+<li><strong>Source of truth 是什么？</strong> 当前内存、数据库行，还是追加式历史？</li>
+<li><strong>何时算 committed？</strong> 系统确认成功前，什么必须已经持久化？</li>
+<li><strong>故障后如何恢复？</strong> 加载 Snapshot、Replay 日志，还是重新投递任务？</li>
+<li><strong>副作用如何处理？</strong> 外部操作成功但确认丢失时，如何避免重复或遗漏？</li>
+<li><strong>如何兼容演进？</strong> 新代码还能否解释旧记录与在途流程？</li>
+</ol>
+<h2 id="01--write-ahead-log">01 · Write-Ahead Log<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#01--write-ahead-log">#</a></h2>
+<p><strong>先记录，再承诺。</strong></p>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>ScheduleActivity</span></span>
+<span data-line=""><span>  → ActivityTaskScheduled durable</span></span>
+<span data-line=""><span>  → Worker 执行</span></span>
+<span data-line=""><span>  → ActivityTaskCompleted durable</span></span>
+<span data-line=""><span>  → Workflow 继续</span></span></code></pre></figure>
+<h4 id="基本原则">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则">#</a></h4>
+<p>在系统宣布修改 committed 之前，必须先持久化足够的恢复信息。</p>
+<p>数据库先落 WAL 与 Commit Record，数据页可以稍后刷盘；Crash 后从最近 Checkpoint 向前 REDO。</p>
+<h4 id="解决什么">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么">#</a></h4>
+<ul>
+<li>已确认的修改不会因 Crash 丢失</li>
+<li>明确 Commit Boundary</li>
+<li>恢复不依赖易失内存</li>
+</ul>
+<h4 id="代价与边界">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界">#</a></h4>
+<ul>
+<li>日志必须高可用、严格排序、可校验</li>
+<li>Checkpoint、清理与存储增长成为长期运维问题</li>
+<li>无法自动覆盖第三方 API 的事务边界</li>
+</ul>
+<h4 id="temporal-如何实践">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践">#</a></h4>
+<p>Temporal 在 Activity 执行前持久化 Schedule Command、Event 与内部 Task；完成后再持久化 Result。</p>
+<p>Worker 死亡不等于工作消失，但支付、LLM、GCS 的副作用无法与 ActivityCompleted 原子提交。</p>
+<h2 id="02--event-sourcing">02 · Event Sourcing<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#02--event-sourcing">#</a></h2>
+<p><strong>状态是历史的 Projection。</strong></p>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>Workflow Started</span></span>
+<span data-line=""><span>  → Activity Completed</span></span>
+<span data-line=""><span>  → Timer Fired</span></span>
+<span data-line=""><span>  → Signal Received</span></span>
+<span data-line=""><span>  → Replay</span></span>
+<span data-line=""><span>  → Memory State</span></span></code></pre></figure>
+<h4 id="基本原则-1">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-1">#</a></h4>
+<p>Event Log 是 Source of Truth；Aggregate State 是事件经过状态转换函数归约后的结果。</p>
+<p>Projection 服务查询，Snapshot 加速恢复，Checkpoint 记录消费者处理到哪里。</p>
+<h4 id="解决什么-1">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-1">#</a></h4>
+<ul>
+<li>完整审计与因果解释</li>
+<li>恢复任意时间点状态</li>
+<li>从同一事实流重建不同视图</li>
+</ul>
+<h4 id="代价与边界-1">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-1">#</a></h4>
+<ul>
+<li>Event Schema 必须长期兼容</li>
+<li>Projection 往往最终一致</li>
+<li>错误事实通常靠补偿事件修正</li>
+</ul>
+<h4 id="temporal-如何实践-1">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-1">#</a></h4>
+<p>Temporal History 是 execution-layer event sourcing：Workflow 内存状态由 Event History + Workflow Code Replay 得到。</p>
+<p>ActivityTaskCompleted 描述执行；PaymentCaptured 描述业务世界。Execution Event 不能替代 Domain Event Store。</p>
+<h2 id="03--deterministic-state-machine">03 · Deterministic State Machine<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#03--deterministic-state-machine">#</a></h2>
+<p><strong>相同历史，得到相同决策。</strong></p>
+<h4 id="基本原则-2">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-2">#</a></h4>
+<p>状态机可写成 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>(New State, Commands) = F(Current State, Input)</span></span></code></span>。</p>
+<p>只要初始状态、输入顺序和转移函数相同，就能重建相同状态与命令。</p>
+<h4 id="解决什么-2">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-2">#</a></h4>
+<ul>
+<li>故障后重建控制流</li>
+<li>让多个执行者对同一历史得出相同结论</li>
+<li>把恢复从猜测变成可验证的重放</li>
+</ul>
+<h4 id="代价与边界-2">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-2">#</a></h4>
+<ul>
+<li>真实时间、随机数和外部 I/O 不能直接影响确定性路径</li>
+<li>并发顺序与代码升级可能改变 Commands</li>
+<li>需要 Replay Test</li>
+</ul>
+<h4 id="temporal-如何实践-2">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-2">#</a></h4>
+<p>Workflow 是确定性状态机；SDK Replay History 并把已有 Activity、Timer、Signal 结果注入代码。</p>
+<p>新 Command 与旧 Event 不匹配时产生 Non-Determinism Error，因此 Workflow 与 Activity 必须分离。</p>
+<h2 id="04--reliable-delivery">04 · Reliable Delivery<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#04--reliable-delivery">#</a></h2>
+<p><strong>工作属于系统，不属于消费者。</strong></p>
+<h4 id="基本原则-3">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-3">#</a></h4>
+<p>工作先持久化，Consumer 只是暂时执行者；失败、超时或消费者消失后可以重新投递。</p>
+<p>Offset、Ack、Lease、Partition 与 Backpressure 一起决定投递语义和系统稳定性。</p>
+<h4 id="解决什么-3">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-3">#</a></h4>
+<ul>
+<li>生产者与消费者解耦</li>
+<li>Worker 滚动部署</li>
+<li>资源隔离和独立扩缩容</li>
+</ul>
+<h4 id="代价与边界-3">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-3">#</a></h4>
+<ul>
+<li>At-least-once 可能重复</li>
+<li>容量不足会形成 Backlog</li>
+<li>路由和分区策略需要设计</li>
+</ul>
+<h4 id="temporal-如何实践-3">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-3">#</a></h4>
+<p>Task Queue 是 Workflow/Activity Task 与 Worker 的路由、负载均衡和资源隔离边界。</p>
+<p>Temporal 不只是 Queue：它同时保存产生这些任务的长期控制流。</p>
+<h2 id="05--at-least-once--idempotency">05 · At-least-once + Idempotency<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#05--at-least-once--idempotency">#</a></h2>
+<p><strong>不确定窗口无法消失。</strong></p>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>副作用成功</span></span>
+<span data-line=""><span>  → 确认前崩溃</span></span>
+<span data-line=""><span>  → Temporal 未见完成</span></span>
+<span data-line=""><span>  → Timeout</span></span>
+<span data-line=""><span>  → Retry</span></span>
+<span data-line=""><span>  → 幂等 / 去重</span></span></code></pre></figure>
+<h4 id="基本原则-4">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-4">#</a></h4>
+<p>外部操作可能已经成功，但调用方在收到确认前崩溃。网络超时意味着不知道结果，不意味着对方没有执行。</p>
+<p>重试可能重复，不重试可能遗漏；Exactly-once business effect 需要应用层协作。</p>
+<h4 id="解决什么-4">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-4">#</a></h4>
+<ul>
+<li>故障后继续尝试</li>
+<li>避免因短暂网络错误丢失关键动作</li>
+<li>把不确定性收敛到可治理的业务语义</li>
+</ul>
+<h4 id="代价与边界-4">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-4">#</a></h4>
+<ul>
+<li>需要 Idempotency Key、唯一约束或 Dedup Table</li>
+<li>不可逆副作用要保留补偿与对账</li>
+<li>可重试错误必须分类</li>
+</ul>
+<h4 id="temporal-如何实践-4">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-4">#</a></h4>
+<p>Activity 默认按可能重复执行设计。可用 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>workflowId</span></span></code></span>/<span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>activityId</span></span></code></span> 生成幂等键，对扣费、创建记录、上传使用唯一约束。</p>
+<p>Temporal 负责可靠重试；业务层负责让重试安全。</p>
+<h2 id="06--process-manager--saga">06 · Process Manager / Saga<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#06--process-manager--saga">#</a></h2>
+<p><strong>长事务必须显式编排。</strong></p>
+<h4 id="基本原则-5">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-5">#</a></h4>
+<p>跨服务、跨小时或等待用户的流程不能长期持有数据库锁。</p>
+<p>Saga 把长事务拆成本地事务，显式记录阶段，并为每一步定义失败、超时、重试和语义补偿。</p>
+<h4 id="解决什么-5">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-5">#</a></h4>
+<ul>
+<li>跨服务长事务</li>
+<li>人工审批与异步等待</li>
+<li>显式取消和补偿</li>
+</ul>
+<h4 id="代价与边界-5">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-5">#</a></h4>
+<ul>
+<li>补偿不等于数据库 Rollback</li>
+<li>业务必须定义哪些事实可逆</li>
+<li>失败路径与正常路径同样需要建模</li>
+</ul>
+<h4 id="temporal-如何实践-5">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-5">#</a></h4>
+<p>Workflow 直接表达阶段、Durable Timer、Signal、Update、Child Workflow、Cancellation 和 Compensation。</p>
+<p>等待几天不占住线程；状态机停在一个由 History 描述、可恢复的条件上。</p>
+<h2 id="07--checkpoint--compaction">07 · Checkpoint &#x26; Compaction<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#07--checkpoint--compaction">#</a></h2>
+<p><strong>历史不能无限增长。</strong></p>
+<h4 id="基本原则-6">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-6">#</a></h4>
+<p>依赖日志恢复的系统必须控制恢复成本：Checkpoint 确认位置，Snapshot 保存派生状态，Compaction/Retention 控制历史。</p>
+<p>数据库从 Checkpoint 后重放 WAL；Event Sourcing 从 Snapshot 后重放事件；流计算从 State Snapshot 与 Offset 恢复。</p>
+<h4 id="解决什么-6">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-6">#</a></h4>
+<ul>
+<li>缩短恢复时间</li>
+<li>控制日志体积</li>
+<li>长任务从部分进度继续</li>
+</ul>
+<h4 id="代价与边界-6">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-6">#</a></h4>
+<ul>
+<li>必须选择正确的最小恢复状态</li>
+<li>压缩可能丢失调试细节</li>
+<li>Retention 需要容量与合规权衡</li>
+</ul>
+<h4 id="temporal-如何实践-6">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-6">#</a></h4>
+<p>Activity Heartbeat Details 保存长任务进度；Retry 可以从 Checkpoint 继续。</p>
+<p>Continue-As-New 用压缩状态创建新 Run 和新 History，但保持同一 Workflow Chain。</p>
+<h2 id="08--compatible-evolution">08 · Compatible Evolution<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#08--compatible-evolution">#</a></h2>
+<p><strong>持久历史意味着兼容责任。</strong></p>
+<h4 id="基本原则-7">基本原则<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#基本原则-7">#</a></h4>
+<p>历史往往比代码版本活得更久。日志型系统必须处理 Schema Evolution、Rolling Upgrade 与新旧消费者并存。</p>
+<p>追加式历史不可变，不代表程序可以随便改变对历史的解释。</p>
+<h4 id="解决什么-7">解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#解决什么-7">#</a></h4>
+<ul>
+<li>在途流程跨版本运行</li>
+<li>滚动升级不中断业务</li>
+<li>旧历史仍可解释</li>
+</ul>
+<h4 id="代价与边界-7">代价与边界<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#代价与边界-7">#</a></h4>
+<ul>
+<li>长期维护兼容分支</li>
+<li>需要真实历史 Replay Test</li>
+<li>迁移与 Drain Window 必须显式规划</li>
+</ul>
+<h4 id="temporal-如何实践-7">Temporal 如何实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何实践-7">#</a></h4>
+<p>Patching、Worker Versioning 与 Replay Test 让新旧 Workflow 并存。Activity 新增、删除、改名或重排都可能导致 NDE。</p>
+<p>典型路径是 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>patched(change-id)</span></span></code></span> → drain → <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>deprecatePatch(change-id)</span></span></code></span> → 清理旧分支。</p>
+<h2 id="temporal-如何把成熟思想组合成-runtime">Temporal 如何把成熟思想组合成 Runtime<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-如何把成熟思想组合成-runtime">#</a></h2>
+<p>Temporal 的核心不是某一个全新发明，而是把可靠系统的成熟原则组合成一个以代码为界面的执行环境。</p>
+<table>
+<thead>
+<tr>
+<th>成熟思想</th>
+<th>Temporal 机制</th>
+<th>解决的问题</th>
+<th>开发者仍需负责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Durable Log</td>
+<td>History / Mutable State / Task</td>
+<td>进度不依赖 Worker</td>
+<td>Persistence HA 与 Retention</td>
+</tr>
+<tr>
+<td>Event Sourcing</td>
+<td>History + Replay</td>
+<td>重建 Workflow State</td>
+<td>区分执行事件与业务事实</td>
+</tr>
+<tr>
+<td>状态机</td>
+<td>Workflow Sandbox</td>
+<td>恢复相同控制流</td>
+<td>保持 Determinism</td>
+</tr>
+<tr>
+<td>Reliable Delivery</td>
+<td>Task Queue / Polling</td>
+<td>重新派发工作</td>
+<td>路由与 Capacity</td>
+</tr>
+<tr>
+<td>At-least-once</td>
+<td>Retry / Timeout</td>
+<td>故障后继续</td>
+<td>幂等、去重、唯一约束</td>
+</tr>
+<tr>
+<td>Saga</td>
+<td>Workflow / Child / Compensation</td>
+<td>跨服务长事务</td>
+<td>定义业务补偿</td>
+</tr>
+<tr>
+<td>Durable Input</td>
+<td>Timer / Signal / Update</td>
+<td>长期等待</td>
+<td>顺序与状态校验</td>
+</tr>
+<tr>
+<td>Checkpoint</td>
+<td>Heartbeat Details</td>
+<td>长 Activity 部分恢复</td>
+<td>定义可恢复进度</td>
+</tr>
+<tr>
+<td>Compaction</td>
+<td>Continue-As-New</td>
+<td>控制 History</td>
+<td>传递必要状态</td>
+</tr>
+<tr>
+<td>Evolution</td>
+<td>Patching / Versioning / Replay</td>
+<td>新旧流程并存</td>
+<td>不破坏旧 History</td>
+</tr>
+</tbody>
+</table>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>持久化事实与意图</span></span>
+<span data-line=""><span>  → 确定性重建控制流</span></span>
+<span data-line=""><span>  → 派发未完成工作</span></span>
+<span data-line=""><span>  → 执行外部副作用</span></span>
+<span data-line=""><span>  → Retry + Idempotency</span></span>
+<span data-line=""><span>  → Checkpoint</span></span>
+<span data-line=""><span>  → Compatible Evolution</span></span></code></pre></figure>
+<h3 id="组件只是原则的载体">组件只是原则的载体<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#组件只是原则的载体">#</a></h3>
+<p>把术语放回思想谱系，Temporal 的组件就变得容易理解。</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>在思想谱系里的位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temporal Service</td>
+<td>Durable Log、状态机推进与任务持久化</td>
+</tr>
+<tr>
+<td>Client</td>
+<td>启动流程并发送外部输入</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>确定性 Process Manager</td>
+</tr>
+<tr>
+<td>Activity</td>
+<td>非确定性副作用边界</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>可替换的计算资源</td>
+</tr>
+<tr>
+<td>Task Queue</td>
+<td>可靠投递、路由与资源隔离</td>
+</tr>
+<tr>
+<td>Namespace</td>
+<td>生命周期、访问与 Retention 边界</td>
+</tr>
+<tr>
+<td>Visibility</td>
+<td>搜索与运维的 Projection</td>
+</tr>
+</tbody>
+</table>
+<p>一次执行的路径：</p>
+<ol>
+<li>Client 启动 Workflow</li>
+<li>Service 持久化 Workflow Started</li>
+<li>Worker Replay History 并生成 Commands</li>
+<li>Commands 变成持久 Events 与 Tasks</li>
+<li>Activity Worker 执行外部副作用</li>
+<li>Service 持久化 Activity Result</li>
+<li>Workflow 再次 Replay 并推进下一步</li>
+</ol>
+<h2 id="temporal-没有解决什么">Temporal 没有解决什么<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#temporal-没有解决什么">#</a></h2>
+<p>把 Temporal 放回基本原则中，也能看清它的能力边界。</p>
+<ol>
+<li>不替代业务数据库与 Domain Event Store</li>
+<li>不自动实现外部副作用 Exactly-once</li>
+<li>不让不可逆操作自动 Rollback</li>
+<li>不替代模型、Planner、工具或 Agent 的智能</li>
+<li>不保证第三方服务可用</li>
+<li>不自动保证新 Workflow 代码兼容旧 History</li>
+<li>不消除 Capacity、Backpressure、Hot Queue 或数据库瓶颈</li>
+<li>不让所有异步任务都值得升级为 Durable Workflow</li>
+</ol>
+<blockquote>
+<p>它的价值是可靠地保存和恢复“程序如何继续”，不是替业务做所有正确性决策。</p>
+</blockquote>
+<h2 id="agent-opus这些原则的具体实践">Agent Opus：这些原则的具体实践<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#agent-opus这些原则的具体实践">#</a></h2>
+<p>Temporal 在 Agent Opus 中不是后台任务队列，而是 Story Mode、UIP、Screenplay、编辑与渲染长流程的持久化控制面。</p>
+<h3 id="screenplayhuman-in-the-loop-process-manager">Screenplay：Human-in-the-loop Process Manager<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#screenplayhuman-in-the-loop-process-manager">#</a></h3>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>world</span></span>
+<span data-line=""><span>  → idea: generate / refine / lock</span></span>
+<span data-line=""><span>  → script: generate / revise / approve</span></span>
+<span data-line=""><span>  → assets</span></span>
+<span data-line=""><span>  → render clips</span></span>
+<span data-line=""><span>  → stitch / output</span></span></code></pre></figure>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Agent Opus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Durable State</td>
+<td>Project 进度由 Workflow History 持久化</td>
+</tr>
+<tr>
+<td>Deterministic Control</td>
+<td>Workflow 只负责阶段、分支与等待</td>
+</tr>
+<tr>
+<td>Side-effect Isolation</td>
+<td>LLM、GCS、模型、DB、ffmpeg 放入 Activity</td>
+</tr>
+<tr>
+<td>Durable Input</td>
+<td>用户 Approve / Refine / Cancel 通过 Signal</td>
+</tr>
+<tr>
+<td>Reliable Retry</td>
+<td>生成与渲染 Activity 配置 Timeout / Retry</td>
+</tr>
+<tr>
+<td>Checkpoint</td>
+<td>长渲染通过 Heartbeat 报告进度</td>
+</tr>
+<tr>
+<td>Idempotency</td>
+<td>Credits、创建记录、上传需要业务去重</td>
+</tr>
+<tr>
+<td>Evolution</td>
+<td>Activity 顺序变化通过 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>patched()</span></span></code></span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="uip更动态的-durable-agent-runtime">UIP：更动态的 Durable Agent Runtime<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#uip更动态的-durable-agent-runtime">#</a></h3>
+<ul>
+<li>主 Workflow 等待用户、工具与系统事件</li>
+<li>Planner 每次推进一步</li>
+<li>工具调用可拆为 Child Workflow</li>
+<li>Query 暴露事件与 active tools</li>
+<li>长 Session 通过 Continue-As-New 更新 History</li>
+</ul>
+<p>Temporal 解决的是 Agent Runtime 不因进程或部署消失，而不是 Agent 如何变聪明。智能仍来自模型、上下文、工具、验证器与反馈循环。</p>
+<h3 id="task-queue资源隔离">Task Queue：资源隔离<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#task-queue资源隔离">#</a></h3>
+<p><span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Main</span></span></code></span> · <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>UIP</span></span></code></span> · <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Image API</span></span></code></span> · <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Video API</span></span></code></span> · <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Brand Extraction</span></span></code></span> · <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Admission</span></span></code></span></p>
+<h3 id="repository-的-replay-纪律">Repository 的 Replay 纪律<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#repository-的-replay-纪律">#</a></h3>
+<ul>
+<li>Local Activity 不进入 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>Promise.all</span></span></code></span>，也不与 Regular Activity 混合并发</li>
+<li>Activity 新增、删除、重排或改名必须考虑 <span data-rehype-pretty-code-figure=""><code data-language="text" data-theme="github-light github-dark"><span data-line=""><span>patched()</span></span></code></span></li>
+<li>Workflow 不直接读取真实时间、随机数、网络、数据库、文件或进程全局状态</li>
+<li>发布前使用真实 History 做 Replay Test</li>
+<li>部署不会天然丢 Workflow，但新代码可能无法 Replay 旧 History</li>
+</ul>
+<h2 id="可靠原则最终落到存储层">可靠原则最终落到存储层<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#可靠原则最终落到存储层">#</a></h2>
+<p>“History 比 Worker 可靠”的前提，是 Temporal Persistence 真正具备更高的可用性、容量和恢复能力。</p>
+<p>Temporal 高频写入 Mutable State、Event History、Workflow/Activity Task、Timer、Transfer Task 与 Visibility。</p>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display: grid;"><span data-line=""><span>频繁 UPDATE / DELETE</span></span>
+<span data-line=""><span>  → Dead tuples 与索引膨胀</span></span>
+<span data-line=""><span>  → Autovacuum 与前台事务争抢 I/O / CPU</span></span>
+<span data-line=""><span>  → Persistence p99 上升</span></span>
+<span data-line=""><span>  → 清理更跟不上</span></span></code></pre></figure>
+<h3 id="alloydb-带来的基础层收益">AlloyDB 带来的基础层收益<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#alloydb-带来的基础层收益">#</a></h3>
+<ul>
+<li>托管 HA、备份、PITR 与升级</li>
+<li>Compute / Storage 分离</li>
+<li>存储自动扩容</li>
+<li>更稳定的写入吞吐</li>
+<li>Adaptive Autovacuum</li>
+</ul>
+<h3 id="它仍然不解决">它仍然不解决<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#它仍然不解决">#</a></h3>
+<ul>
+<li>Workflow History 过大</li>
+<li>Retention 太长或 Payload 太大</li>
+<li>Worker Capacity 不足</li>
+<li>Activity 不幂等</li>
+<li>代码版本不兼容</li>
+</ul>
+<h2 id="什么时候值得引入这种编程模型">什么时候值得引入这种编程模型<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#什么时候值得引入这种编程模型">#</a></h2>
+<h3 id="适合">适合<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#适合">#</a></h3>
+<ul>
+<li>流程跨分钟、小时、天或等待用户</li>
+<li>多步骤失败恢复复杂</li>
+<li>部署不能让流程消失</li>
+<li>需要 Retry、Heartbeat、Cancel、Compensation</li>
+<li>Agent 调用多个工具并需要持久状态</li>
+<li>需要解释执行为何到达当前状态</li>
+</ul>
+<h3 id="不适合">不适合<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#不适合">#</a></h3>
+<ul>
+<li>单个短请求失败后直接重试即可</li>
+<li>普通 Queue / Cron 已经足够</li>
+<li>只需保存当前状态，不需恢复控制流</li>
+<li>团队无法承担 Determinism、Idempotency、版本兼容与 Persistence 运维</li>
+</ul>
+<p>一条简单的划分：</p>
+<ul>
+<li>决定下一步做什么、等待什么 → Workflow</li>
+<li>访问外部世界并产生副作用 → Activity</li>
+</ul>
+<h2 id="从基本原则出发的调试顺序">从基本原则出发的调试顺序<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#从基本原则出发的调试顺序">#</a></h2>
+<ol>
+<li>Source of truth 是 History 还是业务 Projection？</li>
+<li>最后一个 committed Event 是什么？</li>
+<li>下一条 Command 为什么没有产生或完成？</li>
+<li>Task 是否送到正确 Task Queue？</li>
+<li>Worker 是否在线、容量是否足够、Activity 是否注册？</li>
+<li>Activity 是业务失败、Timeout、Heartbeat 丢失还是 Retry？</li>
+<li>副作用是否可能已经成功，但完成记录丢失？</li>
+<li>是否需要幂等、对账或补偿？</li>
+<li>新代码是否与旧 History 产生 NDE？</li>
+<li>History 是否应该 Continue-As-New？</li>
+<li>Persistence latency、lock、vacuum、连接池是否异常？</li>
+</ol>
+<h2 id="卖的不是思想而是承担可靠性责任">卖的不是思想，而是承担可靠性责任<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#卖的不是思想而是承担可靠性责任">#</a></h2>
+<p>Temporal 的核心 Workflow 能力在 Self-hosted 版本中基本完整。Temporal Cloud 主要把成熟思想背后的运维责任产品化。</p>
+<p>商业价值不是解锁高级 Workflow API，而是替客户承担一个已经进入关键业务路径的有状态系统。</p>
+<ul>
+<li>Durable Log 的 HA、备份与扩容</li>
+<li>Schema Migration 与 Server Upgrade</li>
+<li>跨区灾备与 SLA</li>
+<li>Retention、Visibility 与 Capacity</li>
+<li>安全治理、审计与专家支持</li>
+</ul>
+<p><strong>研究快照 / 2026.07.20</strong></p>
+<ul>
+<li>2025 ARR > USD 100M（公开报道）</li>
+<li>2025.03：2,500+ Cloud 客户，NDR 184%</li>
+<li>2026.02：Series D USD 300M，估值 USD 5B</li>
+</ul>
+<h2 id="来源与延伸阅读">来源与延伸阅读<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#来源与延伸阅读">#</a></h2>
+<p>以下材料提供了本文使用的系统设计与 Temporal 背景。</p>
+<ul>
+<li><a href="https://www.postgresql.org/docs/current/wal-intro.html">PostgreSQL · Write-Ahead Log</a></li>
+<li><a href="https://martinfowler.com/eaaDev/EventSourcing.html">Martin Fowler · Event Sourcing</a></li>
+<li><a href="https://docs.temporal.io/workflows">Temporal · Workflows</a></li>
+<li><a href="https://docs.temporal.io/encyclopedia/event-history">Temporal · Event History</a></li>
+<li><a href="https://docs.temporal.io/activities">Temporal · Activities</a></li>
+<li><a href="https://docs.temporal.io/task-queue">Temporal · Task Queues</a></li>
+<li><a href="https://docs.temporal.io/workflow-execution/versioning">Temporal · Versioning</a></li>
+<li><a href="https://cloud.google.com/alloydb/docs/overview">Google Cloud · AlloyDB</a></li>
+<li><a href="https://temporal.io/cloud">Temporal Cloud</a></li>
+</ul></section><nav class="Article-module__KK9pta__pager" aria-label="Adjacent entries"><a class="Article-module__KK9pta__older" href="/notes/2026-07-02-13f-institutional-holdings-volatility"><small>Older →</small><span>20 家主流机构最近三年 13F 持仓波动观察</span></a></nav><a class="Article-module__KK9pta__back" href="/notes">All notes</a></div><aside class="Site-module__a1fuAW__aside"><nav class="Article-module__KK9pta__toc" aria-label="Contents"><h2>Contents</h2><ol><li data-depth="2"><a href="#可靠执行的共同公式">可靠执行的共同公式</a></li><li data-depth="2"><a href="#任何-durable-system-都要回答五个问题">任何 Durable System 都要回答五个问题</a></li><li data-depth="2"><a href="#01--write-ahead-log">01 · Write-Ahead Log</a></li><li data-depth="2"><a href="#02--event-sourcing">02 · Event Sourcing</a></li><li data-depth="2"><a href="#03--deterministic-state-machine">03 · Deterministic State Machine</a></li><li data-depth="2"><a href="#04--reliable-delivery">04 · Reliable Delivery</a></li><li data-depth="2"><a href="#05--at-least-once--idempotency">05 · At-least-once + Idempotency</a></li><li data-depth="2"><a href="#06--process-manager--saga">06 · Process Manager / Saga</a></li><li data-depth="2"><a href="#07--checkpoint--compaction">07 · Checkpoint &amp; Compaction</a></li><li data-depth="2"><a href="#08--compatible-evolution">08 · Compatible Evolution</a></li><li data-depth="2"><a href="#temporal-如何把成熟思想组合成-runtime">Temporal 如何把成熟思想组合成 Runtime</a></li><li data-depth="3"><a href="#组件只是原则的载体">组件只是原则的载体</a></li><li data-depth="2"><a href="#temporal-没有解决什么">Temporal 没有解决什么</a></li><li data-depth="2"><a href="#agent-opus这些原则的具体实践">Agent Opus：这些原则的具体实践</a></li><li data-depth="3"><a href="#screenplayhuman-in-the-loop-process-manager">Screenplay：Human-in-the-loop Process Manager</a></li><li data-depth="3"><a href="#uip更动态的-durable-agent-runtime">UIP：更动态的 Durable Agent Runtime</a></li><li data-depth="3"><a href="#task-queue资源隔离">Task Queue：资源隔离</a></li><li data-depth="3"><a href="#repository-的-replay-纪律">Repository 的 Replay 纪律</a></li><li data-depth="2"><a href="#可靠原则最终落到存储层">可靠原则最终落到存储层</a></li><li data-depth="3"><a href="#alloydb-带来的基础层收益">AlloyDB 带来的基础层收益</a></li><li data-depth="3"><a href="#它仍然不解决">它仍然不解决</a></li><li data-depth="2"><a href="#什么时候值得引入这种编程模型">什么时候值得引入这种编程模型</a></li><li data-depth="3"><a href="#适合">适合</a></li><li data-depth="3"><a href="#不适合">不适合</a></li><li data-depth="2"><a href="#从基本原则出发的调试顺序">从基本原则出发的调试顺序</a></li><li data-depth="2"><a href="#卖的不是思想而是承担可靠性责任">卖的不是思想，而是承担可靠性责任</a></li><li data-depth="2"><a href="#来源与延伸阅读">来源与延伸阅读</a></li></ol></nav></aside></article></main><footer class="Site-module__a1fuAW__container Site-module__a1fuAW__footer"><p>© <!-- -->2026<!-- --> <!-- -->Yuhang Xiao</p><nav class="Site-module__a1fuAW__footerLinks" aria-label="Contact"><a href="mailto:yuhangxiaocs@gmail.com">Email</a><a href="https://github.com/littlemoon-zh" target="_blank" rel="noreferrer">GitHub</a><a href="https://www.linkedin.com/in/yuhang-xiao/" target="_blank" rel="noreferrer">LinkedIn</a><a href="/feed.xml">RSS</a></nav></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"note":{"slug":"from-logs-to-durable-execution","href":"/notes/from-logs-to-durable-execution","source":"mdx","title":"从日志到 Durable Execution","date":"2026-07-20","summary":"这不是一篇 Temporal 功能手册。它讨论的是可靠执行的基本原则，以及 Temporal 如何把这些成熟思想组合成一个可编程 Runtime。","draft":false,"tags":["distributed-systems","durable-execution","temporal"],"layout":"article","html":"\u003cp\u003e一个跨服务、跨故障、跨部署、可能运行数月的程序，如何不依赖某个进程的内存，仍然知道发生过什么、恢复到正确状态，并继续完成剩余工作？\u003c/p\u003e\n\u003cp\u003e回答这个问题需要五件事：Durable record、Deterministic replay、Reliable delivery、Idempotent effects、Compatible evolution。\u003c/p\u003e\n\u003ch2 id=\"可靠执行的共同公式\"\u003e可靠执行的共同公式\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#可靠执行的共同公式\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e数据库、Event Sourcing、消息系统、流计算、区块链和 Temporal 看起来不同，但它们反复使用同一组原则。\u003c/p\u003e\n\u003cp\u003e这些系统的差别，主要在于要恢复的对象不同；相同之处，是都把易失状态转化为可以持久化、排序和重新解释的记录。\u003c/p\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003e易失的运行状态\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 持久、排序、可解释的记录\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 确定性重建派生状态\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 重新派发未完成工作\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 幂等、去重或补偿\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Checkpoint 与兼容演进\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003e系统\u003c/th\u003e\n\u003cth\u003e保护对象\u003c/th\u003e\n\u003cth\u003e持久化记录\u003c/th\u003e\n\u003cth\u003e恢复目标\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\n\u003ctr\u003e\n\u003ctd\u003e数据库 WAL\u003c/td\u003e\n\u003ctd\u003e数据页与事务状态\u003c/td\u003e\n\u003ctd\u003eRedo / Undo / Commit Log\u003c/td\u003e\n\u003ctd\u003eCrash 后恢复一致数据库\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eEvent Sourcing\u003c/td\u003e\n\u003ctd\u003e业务事实与 Aggregate\u003c/td\u003e\n\u003ctd\u003eDomain Event Stream\u003c/td\u003e\n\u003ctd\u003e重建状态与 Projection\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eRaft\u003c/td\u003e\n\u003ctd\u003e多副本服务状态\u003c/td\u003e\n\u003ctd\u003e共识排序的 Command Log\u003c/td\u003e\n\u003ctd\u003e副本得到相同状态\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e消息系统\u003c/td\u003e\n\u003ctd\u003e尚未完成的工作\u003c/td\u003e\n\u003ctd\u003eMessage / Offset / Ack\u003c/td\u003e\n\u003ctd\u003e重新投递并继续消费\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e流计算\u003c/td\u003e\n\u003ctd\u003e消费位置与计算状态\u003c/td\u003e\n\u003ctd\u003eOffset / Checkpoint / Snapshot\u003c/td\u003e\n\u003ctd\u003e从一致位置恢复计算\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e区块链\u003c/td\u003e\n\u003ctd\u003e多方认可的状态转换\u003c/td\u003e\n\u003ctd\u003e交易与区块\u003c/td\u003e\n\u003ctd\u003e重建链上状态\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eTemporal\u003c/td\u003e\n\u003ctd\u003e跨服务程序的执行状态\u003c/td\u003e\n\u003ctd\u003eWorkflow Event History\u003c/td\u003e\n\u003ctd\u003e重建控制流并继续执行\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\n\u003c/table\u003e\n\u003ch2 id=\"任何-durable-system-都要回答五个问题\"\u003e任何 Durable System 都要回答五个问题\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#任何-durable-system-都要回答五个问题\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e下面八类成熟思想，本质上都在回答这些问题。\u003c/p\u003e\n\u003col\u003e\n\u003cli\u003e\u003cstrong\u003eSource of truth 是什么？\u003c/strong\u003e 当前内存、数据库行，还是追加式历史？\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003e何时算 committed？\u003c/strong\u003e 系统确认成功前，什么必须已经持久化？\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003e故障后如何恢复？\u003c/strong\u003e 加载 Snapshot、Replay 日志，还是重新投递任务？\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003e副作用如何处理？\u003c/strong\u003e 外部操作成功但确认丢失时，如何避免重复或遗漏？\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003e如何兼容演进？\u003c/strong\u003e 新代码还能否解释旧记录与在途流程？\u003c/li\u003e\n\u003c/ol\u003e\n\u003ch2 id=\"01--write-ahead-log\"\u003e01 · Write-Ahead Log\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#01--write-ahead-log\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e先记录，再承诺。\u003c/strong\u003e\u003c/p\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eScheduleActivity\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → ActivityTaskScheduled durable\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Worker 执行\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → ActivityTaskCompleted durable\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Workflow 继续\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ch4 id=\"基本原则\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e在系统宣布修改 committed 之前，必须先持久化足够的恢复信息。\u003c/p\u003e\n\u003cp\u003e数据库先落 WAL 与 Commit Record，数据页可以稍后刷盘；Crash 后从最近 Checkpoint 向前 REDO。\u003c/p\u003e\n\u003ch4 id=\"解决什么\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e已确认的修改不会因 Crash 丢失\u003c/li\u003e\n\u003cli\u003e明确 Commit Boundary\u003c/li\u003e\n\u003cli\u003e恢复不依赖易失内存\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e日志必须高可用、严格排序、可校验\u003c/li\u003e\n\u003cli\u003eCheckpoint、清理与存储增长成为长期运维问题\u003c/li\u003e\n\u003cli\u003e无法自动覆盖第三方 API 的事务边界\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eTemporal 在 Activity 执行前持久化 Schedule Command、Event 与内部 Task；完成后再持久化 Result。\u003c/p\u003e\n\u003cp\u003eWorker 死亡不等于工作消失，但支付、LLM、GCS 的副作用无法与 ActivityCompleted 原子提交。\u003c/p\u003e\n\u003ch2 id=\"02--event-sourcing\"\u003e02 · Event Sourcing\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#02--event-sourcing\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e状态是历史的 Projection。\u003c/strong\u003e\u003c/p\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eWorkflow Started\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Activity Completed\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Timer Fired\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Signal Received\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Replay\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Memory State\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ch4 id=\"基本原则-1\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-1\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eEvent Log 是 Source of Truth；Aggregate State 是事件经过状态转换函数归约后的结果。\u003c/p\u003e\n\u003cp\u003eProjection 服务查询，Snapshot 加速恢复，Checkpoint 记录消费者处理到哪里。\u003c/p\u003e\n\u003ch4 id=\"解决什么-1\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-1\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e完整审计与因果解释\u003c/li\u003e\n\u003cli\u003e恢复任意时间点状态\u003c/li\u003e\n\u003cli\u003e从同一事实流重建不同视图\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-1\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-1\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eEvent Schema 必须长期兼容\u003c/li\u003e\n\u003cli\u003eProjection 往往最终一致\u003c/li\u003e\n\u003cli\u003e错误事实通常靠补偿事件修正\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-1\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-1\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eTemporal History 是 execution-layer event sourcing：Workflow 内存状态由 Event History + Workflow Code Replay 得到。\u003c/p\u003e\n\u003cp\u003eActivityTaskCompleted 描述执行；PaymentCaptured 描述业务世界。Execution Event 不能替代 Domain Event Store。\u003c/p\u003e\n\u003ch2 id=\"03--deterministic-state-machine\"\u003e03 · Deterministic State Machine\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#03--deterministic-state-machine\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e相同历史，得到相同决策。\u003c/strong\u003e\u003c/p\u003e\n\u003ch4 id=\"基本原则-2\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-2\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e状态机可写成 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003e(New State, Commands) = F(Current State, Input)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e。\u003c/p\u003e\n\u003cp\u003e只要初始状态、输入顺序和转移函数相同，就能重建相同状态与命令。\u003c/p\u003e\n\u003ch4 id=\"解决什么-2\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-2\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e故障后重建控制流\u003c/li\u003e\n\u003cli\u003e让多个执行者对同一历史得出相同结论\u003c/li\u003e\n\u003cli\u003e把恢复从猜测变成可验证的重放\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-2\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-2\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e真实时间、随机数和外部 I/O 不能直接影响确定性路径\u003c/li\u003e\n\u003cli\u003e并发顺序与代码升级可能改变 Commands\u003c/li\u003e\n\u003cli\u003e需要 Replay Test\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-2\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-2\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eWorkflow 是确定性状态机；SDK Replay History 并把已有 Activity、Timer、Signal 结果注入代码。\u003c/p\u003e\n\u003cp\u003e新 Command 与旧 Event 不匹配时产生 Non-Determinism Error，因此 Workflow 与 Activity 必须分离。\u003c/p\u003e\n\u003ch2 id=\"04--reliable-delivery\"\u003e04 · Reliable Delivery\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#04--reliable-delivery\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e工作属于系统，不属于消费者。\u003c/strong\u003e\u003c/p\u003e\n\u003ch4 id=\"基本原则-3\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-3\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e工作先持久化，Consumer 只是暂时执行者；失败、超时或消费者消失后可以重新投递。\u003c/p\u003e\n\u003cp\u003eOffset、Ack、Lease、Partition 与 Backpressure 一起决定投递语义和系统稳定性。\u003c/p\u003e\n\u003ch4 id=\"解决什么-3\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-3\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e生产者与消费者解耦\u003c/li\u003e\n\u003cli\u003eWorker 滚动部署\u003c/li\u003e\n\u003cli\u003e资源隔离和独立扩缩容\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-3\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-3\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eAt-least-once 可能重复\u003c/li\u003e\n\u003cli\u003e容量不足会形成 Backlog\u003c/li\u003e\n\u003cli\u003e路由和分区策略需要设计\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-3\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-3\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eTask Queue 是 Workflow/Activity Task 与 Worker 的路由、负载均衡和资源隔离边界。\u003c/p\u003e\n\u003cp\u003eTemporal 不只是 Queue：它同时保存产生这些任务的长期控制流。\u003c/p\u003e\n\u003ch2 id=\"05--at-least-once--idempotency\"\u003e05 · At-least-once + Idempotency\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#05--at-least-once--idempotency\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e不确定窗口无法消失。\u003c/strong\u003e\u003c/p\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003e副作用成功\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 确认前崩溃\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Temporal 未见完成\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Timeout\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Retry\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 幂等 / 去重\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ch4 id=\"基本原则-4\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-4\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e外部操作可能已经成功，但调用方在收到确认前崩溃。网络超时意味着不知道结果，不意味着对方没有执行。\u003c/p\u003e\n\u003cp\u003e重试可能重复，不重试可能遗漏；Exactly-once business effect 需要应用层协作。\u003c/p\u003e\n\u003ch4 id=\"解决什么-4\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-4\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e故障后继续尝试\u003c/li\u003e\n\u003cli\u003e避免因短暂网络错误丢失关键动作\u003c/li\u003e\n\u003cli\u003e把不确定性收敛到可治理的业务语义\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-4\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-4\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e需要 Idempotency Key、唯一约束或 Dedup Table\u003c/li\u003e\n\u003cli\u003e不可逆副作用要保留补偿与对账\u003c/li\u003e\n\u003cli\u003e可重试错误必须分类\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-4\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-4\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eActivity 默认按可能重复执行设计。可用 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eworkflowId\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e/\u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eactivityId\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e 生成幂等键，对扣费、创建记录、上传使用唯一约束。\u003c/p\u003e\n\u003cp\u003eTemporal 负责可靠重试；业务层负责让重试安全。\u003c/p\u003e\n\u003ch2 id=\"06--process-manager--saga\"\u003e06 · Process Manager / Saga\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#06--process-manager--saga\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e长事务必须显式编排。\u003c/strong\u003e\u003c/p\u003e\n\u003ch4 id=\"基本原则-5\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-5\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e跨服务、跨小时或等待用户的流程不能长期持有数据库锁。\u003c/p\u003e\n\u003cp\u003eSaga 把长事务拆成本地事务，显式记录阶段，并为每一步定义失败、超时、重试和语义补偿。\u003c/p\u003e\n\u003ch4 id=\"解决什么-5\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-5\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e跨服务长事务\u003c/li\u003e\n\u003cli\u003e人工审批与异步等待\u003c/li\u003e\n\u003cli\u003e显式取消和补偿\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-5\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-5\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e补偿不等于数据库 Rollback\u003c/li\u003e\n\u003cli\u003e业务必须定义哪些事实可逆\u003c/li\u003e\n\u003cli\u003e失败路径与正常路径同样需要建模\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-5\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-5\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eWorkflow 直接表达阶段、Durable Timer、Signal、Update、Child Workflow、Cancellation 和 Compensation。\u003c/p\u003e\n\u003cp\u003e等待几天不占住线程；状态机停在一个由 History 描述、可恢复的条件上。\u003c/p\u003e\n\u003ch2 id=\"07--checkpoint--compaction\"\u003e07 · Checkpoint \u0026#x26; Compaction\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#07--checkpoint--compaction\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e历史不能无限增长。\u003c/strong\u003e\u003c/p\u003e\n\u003ch4 id=\"基本原则-6\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-6\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e依赖日志恢复的系统必须控制恢复成本：Checkpoint 确认位置，Snapshot 保存派生状态，Compaction/Retention 控制历史。\u003c/p\u003e\n\u003cp\u003e数据库从 Checkpoint 后重放 WAL；Event Sourcing 从 Snapshot 后重放事件；流计算从 State Snapshot 与 Offset 恢复。\u003c/p\u003e\n\u003ch4 id=\"解决什么-6\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-6\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e缩短恢复时间\u003c/li\u003e\n\u003cli\u003e控制日志体积\u003c/li\u003e\n\u003cli\u003e长任务从部分进度继续\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-6\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-6\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e必须选择正确的最小恢复状态\u003c/li\u003e\n\u003cli\u003e压缩可能丢失调试细节\u003c/li\u003e\n\u003cli\u003eRetention 需要容量与合规权衡\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-6\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-6\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003eActivity Heartbeat Details 保存长任务进度；Retry 可以从 Checkpoint 继续。\u003c/p\u003e\n\u003cp\u003eContinue-As-New 用压缩状态创建新 Run 和新 History，但保持同一 Workflow Chain。\u003c/p\u003e\n\u003ch2 id=\"08--compatible-evolution\"\u003e08 · Compatible Evolution\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#08--compatible-evolution\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e\u003cstrong\u003e持久历史意味着兼容责任。\u003c/strong\u003e\u003c/p\u003e\n\u003ch4 id=\"基本原则-7\"\u003e基本原则\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#基本原则-7\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003e历史往往比代码版本活得更久。日志型系统必须处理 Schema Evolution、Rolling Upgrade 与新旧消费者并存。\u003c/p\u003e\n\u003cp\u003e追加式历史不可变，不代表程序可以随便改变对历史的解释。\u003c/p\u003e\n\u003ch4 id=\"解决什么-7\"\u003e解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#解决什么-7\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e在途流程跨版本运行\u003c/li\u003e\n\u003cli\u003e滚动升级不中断业务\u003c/li\u003e\n\u003cli\u003e旧历史仍可解释\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"代价与边界-7\"\u003e代价与边界\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#代价与边界-7\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003e长期维护兼容分支\u003c/li\u003e\n\u003cli\u003e需要真实历史 Replay Test\u003c/li\u003e\n\u003cli\u003e迁移与 Drain Window 必须显式规划\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4 id=\"temporal-如何实践-7\"\u003eTemporal 如何实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何实践-7\"\u003e#\u003c/a\u003e\u003c/h4\u003e\n\u003cp\u003ePatching、Worker Versioning 与 Replay Test 让新旧 Workflow 并存。Activity 新增、删除、改名或重排都可能导致 NDE。\u003c/p\u003e\n\u003cp\u003e典型路径是 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003epatched(change-id)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e → drain → \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003edeprecatePatch(change-id)\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e → 清理旧分支。\u003c/p\u003e\n\u003ch2 id=\"temporal-如何把成熟思想组合成-runtime\"\u003eTemporal 如何把成熟思想组合成 Runtime\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-如何把成熟思想组合成-runtime\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003eTemporal 的核心不是某一个全新发明，而是把可靠系统的成熟原则组合成一个以代码为界面的执行环境。\u003c/p\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003e成熟思想\u003c/th\u003e\n\u003cth\u003eTemporal 机制\u003c/th\u003e\n\u003cth\u003e解决的问题\u003c/th\u003e\n\u003cth\u003e开发者仍需负责\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\n\u003ctr\u003e\n\u003ctd\u003eDurable Log\u003c/td\u003e\n\u003ctd\u003eHistory / Mutable State / Task\u003c/td\u003e\n\u003ctd\u003e进度不依赖 Worker\u003c/td\u003e\n\u003ctd\u003ePersistence HA 与 Retention\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eEvent Sourcing\u003c/td\u003e\n\u003ctd\u003eHistory + Replay\u003c/td\u003e\n\u003ctd\u003e重建 Workflow State\u003c/td\u003e\n\u003ctd\u003e区分执行事件与业务事实\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e状态机\u003c/td\u003e\n\u003ctd\u003eWorkflow Sandbox\u003c/td\u003e\n\u003ctd\u003e恢复相同控制流\u003c/td\u003e\n\u003ctd\u003e保持 Determinism\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eReliable Delivery\u003c/td\u003e\n\u003ctd\u003eTask Queue / Polling\u003c/td\u003e\n\u003ctd\u003e重新派发工作\u003c/td\u003e\n\u003ctd\u003e路由与 Capacity\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAt-least-once\u003c/td\u003e\n\u003ctd\u003eRetry / Timeout\u003c/td\u003e\n\u003ctd\u003e故障后继续\u003c/td\u003e\n\u003ctd\u003e幂等、去重、唯一约束\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSaga\u003c/td\u003e\n\u003ctd\u003eWorkflow / Child / Compensation\u003c/td\u003e\n\u003ctd\u003e跨服务长事务\u003c/td\u003e\n\u003ctd\u003e定义业务补偿\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eDurable Input\u003c/td\u003e\n\u003ctd\u003eTimer / Signal / Update\u003c/td\u003e\n\u003ctd\u003e长期等待\u003c/td\u003e\n\u003ctd\u003e顺序与状态校验\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eCheckpoint\u003c/td\u003e\n\u003ctd\u003eHeartbeat Details\u003c/td\u003e\n\u003ctd\u003e长 Activity 部分恢复\u003c/td\u003e\n\u003ctd\u003e定义可恢复进度\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eCompaction\u003c/td\u003e\n\u003ctd\u003eContinue-As-New\u003c/td\u003e\n\u003ctd\u003e控制 History\u003c/td\u003e\n\u003ctd\u003e传递必要状态\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eEvolution\u003c/td\u003e\n\u003ctd\u003ePatching / Versioning / Replay\u003c/td\u003e\n\u003ctd\u003e新旧流程并存\u003c/td\u003e\n\u003ctd\u003e不破坏旧 History\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\n\u003c/table\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003e持久化事实与意图\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 确定性重建控制流\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 派发未完成工作\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 执行外部副作用\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Retry + Idempotency\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Checkpoint\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Compatible Evolution\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ch3 id=\"组件只是原则的载体\"\u003e组件只是原则的载体\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#组件只是原则的载体\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cp\u003e把术语放回思想谱系，Temporal 的组件就变得容易理解。\u003c/p\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003e组件\u003c/th\u003e\n\u003cth\u003e在思想谱系里的位置\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\n\u003ctr\u003e\n\u003ctd\u003eTemporal Service\u003c/td\u003e\n\u003ctd\u003eDurable Log、状态机推进与任务持久化\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eClient\u003c/td\u003e\n\u003ctd\u003e启动流程并发送外部输入\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eWorkflow\u003c/td\u003e\n\u003ctd\u003e确定性 Process Manager\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eActivity\u003c/td\u003e\n\u003ctd\u003e非确定性副作用边界\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eWorker\u003c/td\u003e\n\u003ctd\u003e可替换的计算资源\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eTask Queue\u003c/td\u003e\n\u003ctd\u003e可靠投递、路由与资源隔离\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNamespace\u003c/td\u003e\n\u003ctd\u003e生命周期、访问与 Retention 边界\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eVisibility\u003c/td\u003e\n\u003ctd\u003e搜索与运维的 Projection\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\n\u003c/table\u003e\n\u003cp\u003e一次执行的路径：\u003c/p\u003e\n\u003col\u003e\n\u003cli\u003eClient 启动 Workflow\u003c/li\u003e\n\u003cli\u003eService 持久化 Workflow Started\u003c/li\u003e\n\u003cli\u003eWorker Replay History 并生成 Commands\u003c/li\u003e\n\u003cli\u003eCommands 变成持久 Events 与 Tasks\u003c/li\u003e\n\u003cli\u003eActivity Worker 执行外部副作用\u003c/li\u003e\n\u003cli\u003eService 持久化 Activity Result\u003c/li\u003e\n\u003cli\u003eWorkflow 再次 Replay 并推进下一步\u003c/li\u003e\n\u003c/ol\u003e\n\u003ch2 id=\"temporal-没有解决什么\"\u003eTemporal 没有解决什么\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#temporal-没有解决什么\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e把 Temporal 放回基本原则中，也能看清它的能力边界。\u003c/p\u003e\n\u003col\u003e\n\u003cli\u003e不替代业务数据库与 Domain Event Store\u003c/li\u003e\n\u003cli\u003e不自动实现外部副作用 Exactly-once\u003c/li\u003e\n\u003cli\u003e不让不可逆操作自动 Rollback\u003c/li\u003e\n\u003cli\u003e不替代模型、Planner、工具或 Agent 的智能\u003c/li\u003e\n\u003cli\u003e不保证第三方服务可用\u003c/li\u003e\n\u003cli\u003e不自动保证新 Workflow 代码兼容旧 History\u003c/li\u003e\n\u003cli\u003e不消除 Capacity、Backpressure、Hot Queue 或数据库瓶颈\u003c/li\u003e\n\u003cli\u003e不让所有异步任务都值得升级为 Durable Workflow\u003c/li\u003e\n\u003c/ol\u003e\n\u003cblockquote\u003e\n\u003cp\u003e它的价值是可靠地保存和恢复“程序如何继续”，不是替业务做所有正确性决策。\u003c/p\u003e\n\u003c/blockquote\u003e\n\u003ch2 id=\"agent-opus这些原则的具体实践\"\u003eAgent Opus：这些原则的具体实践\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#agent-opus这些原则的具体实践\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003eTemporal 在 Agent Opus 中不是后台任务队列，而是 Story Mode、UIP、Screenplay、编辑与渲染长流程的持久化控制面。\u003c/p\u003e\n\u003ch3 id=\"screenplayhuman-in-the-loop-process-manager\"\u003eScreenplay：Human-in-the-loop Process Manager\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#screenplayhuman-in-the-loop-process-manager\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eworld\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → idea: generate / refine / lock\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → script: generate / revise / approve\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → assets\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → render clips\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → stitch / output\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003ePrinciple\u003c/th\u003e\n\u003cth\u003eAgent Opus\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\n\u003ctr\u003e\n\u003ctd\u003eDurable State\u003c/td\u003e\n\u003ctd\u003eProject 进度由 Workflow History 持久化\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eDeterministic Control\u003c/td\u003e\n\u003ctd\u003eWorkflow 只负责阶段、分支与等待\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSide-effect Isolation\u003c/td\u003e\n\u003ctd\u003eLLM、GCS、模型、DB、ffmpeg 放入 Activity\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eDurable Input\u003c/td\u003e\n\u003ctd\u003e用户 Approve / Refine / Cancel 通过 Signal\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eReliable Retry\u003c/td\u003e\n\u003ctd\u003e生成与渲染 Activity 配置 Timeout / Retry\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eCheckpoint\u003c/td\u003e\n\u003ctd\u003e长渲染通过 Heartbeat 报告进度\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eIdempotency\u003c/td\u003e\n\u003ctd\u003eCredits、创建记录、上传需要业务去重\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eEvolution\u003c/td\u003e\n\u003ctd\u003eActivity 顺序变化通过 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003epatched()\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\n\u003c/table\u003e\n\u003ch3 id=\"uip更动态的-durable-agent-runtime\"\u003eUIP：更动态的 Durable Agent Runtime\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#uip更动态的-durable-agent-runtime\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003e主 Workflow 等待用户、工具与系统事件\u003c/li\u003e\n\u003cli\u003ePlanner 每次推进一步\u003c/li\u003e\n\u003cli\u003e工具调用可拆为 Child Workflow\u003c/li\u003e\n\u003cli\u003eQuery 暴露事件与 active tools\u003c/li\u003e\n\u003cli\u003e长 Session 通过 Continue-As-New 更新 History\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eTemporal 解决的是 Agent Runtime 不因进程或部署消失，而不是 Agent 如何变聪明。智能仍来自模型、上下文、工具、验证器与反馈循环。\u003c/p\u003e\n\u003ch3 id=\"task-queue资源隔离\"\u003eTask Queue：资源隔离\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#task-queue资源隔离\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cp\u003e\u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eMain\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e · \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eUIP\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e · \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eImage API\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e · \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eVideo API\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e · \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eBrand Extraction\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e · \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003eAdmission\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e\u003c/p\u003e\n\u003ch3 id=\"repository-的-replay-纪律\"\u003eRepository 的 Replay 纪律\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#repository-的-replay-纪律\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003eLocal Activity 不进入 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003ePromise.all\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e，也不与 Regular Activity 混合并发\u003c/li\u003e\n\u003cli\u003eActivity 新增、删除、重排或改名必须考虑 \u003cspan data-rehype-pretty-code-figure=\"\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003epatched()\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/span\u003e\u003c/li\u003e\n\u003cli\u003eWorkflow 不直接读取真实时间、随机数、网络、数据库、文件或进程全局状态\u003c/li\u003e\n\u003cli\u003e发布前使用真实 History 做 Replay Test\u003c/li\u003e\n\u003cli\u003e部署不会天然丢 Workflow，但新代码可能无法 Replay 旧 History\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2 id=\"可靠原则最终落到存储层\"\u003e可靠原则最终落到存储层\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#可靠原则最终落到存储层\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e“History 比 Worker 可靠”的前提，是 Temporal Persistence 真正具备更高的可用性、容量和恢复能力。\u003c/p\u003e\n\u003cp\u003eTemporal 高频写入 Mutable State、Event History、Workflow/Activity Task、Timer、Transfer Task 与 Visibility。\u003c/p\u003e\n\u003cfigure data-rehype-pretty-code-figure=\"\"\u003e\u003cpre tabindex=\"0\" data-language=\"text\" data-theme=\"github-light github-dark\"\u003e\u003ccode data-language=\"text\" data-theme=\"github-light github-dark\" style=\"display: grid;\"\u003e\u003cspan data-line=\"\"\u003e\u003cspan\u003e频繁 UPDATE / DELETE\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Dead tuples 与索引膨胀\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Autovacuum 与前台事务争抢 I/O / CPU\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → Persistence p99 上升\u003c/span\u003e\u003c/span\u003e\n\u003cspan data-line=\"\"\u003e\u003cspan\u003e  → 清理更跟不上\u003c/span\u003e\u003c/span\u003e\u003c/code\u003e\u003c/pre\u003e\u003c/figure\u003e\n\u003ch3 id=\"alloydb-带来的基础层收益\"\u003eAlloyDB 带来的基础层收益\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#alloydb-带来的基础层收益\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003e托管 HA、备份、PITR 与升级\u003c/li\u003e\n\u003cli\u003eCompute / Storage 分离\u003c/li\u003e\n\u003cli\u003e存储自动扩容\u003c/li\u003e\n\u003cli\u003e更稳定的写入吞吐\u003c/li\u003e\n\u003cli\u003eAdaptive Autovacuum\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch3 id=\"它仍然不解决\"\u003e它仍然不解决\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#它仍然不解决\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003eWorkflow History 过大\u003c/li\u003e\n\u003cli\u003eRetention 太长或 Payload 太大\u003c/li\u003e\n\u003cli\u003eWorker Capacity 不足\u003c/li\u003e\n\u003cli\u003eActivity 不幂等\u003c/li\u003e\n\u003cli\u003e代码版本不兼容\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2 id=\"什么时候值得引入这种编程模型\"\u003e什么时候值得引入这种编程模型\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#什么时候值得引入这种编程模型\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003ch3 id=\"适合\"\u003e适合\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#适合\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003e流程跨分钟、小时、天或等待用户\u003c/li\u003e\n\u003cli\u003e多步骤失败恢复复杂\u003c/li\u003e\n\u003cli\u003e部署不能让流程消失\u003c/li\u003e\n\u003cli\u003e需要 Retry、Heartbeat、Cancel、Compensation\u003c/li\u003e\n\u003cli\u003eAgent 调用多个工具并需要持久状态\u003c/li\u003e\n\u003cli\u003e需要解释执行为何到达当前状态\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch3 id=\"不适合\"\u003e不适合\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#不适合\"\u003e#\u003c/a\u003e\u003c/h3\u003e\n\u003cul\u003e\n\u003cli\u003e单个短请求失败后直接重试即可\u003c/li\u003e\n\u003cli\u003e普通 Queue / Cron 已经足够\u003c/li\u003e\n\u003cli\u003e只需保存当前状态，不需恢复控制流\u003c/li\u003e\n\u003cli\u003e团队无法承担 Determinism、Idempotency、版本兼容与 Persistence 运维\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e一条简单的划分：\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003e决定下一步做什么、等待什么 → Workflow\u003c/li\u003e\n\u003cli\u003e访问外部世界并产生副作用 → Activity\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2 id=\"从基本原则出发的调试顺序\"\u003e从基本原则出发的调试顺序\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#从基本原则出发的调试顺序\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003col\u003e\n\u003cli\u003eSource of truth 是 History 还是业务 Projection？\u003c/li\u003e\n\u003cli\u003e最后一个 committed Event 是什么？\u003c/li\u003e\n\u003cli\u003e下一条 Command 为什么没有产生或完成？\u003c/li\u003e\n\u003cli\u003eTask 是否送到正确 Task Queue？\u003c/li\u003e\n\u003cli\u003eWorker 是否在线、容量是否足够、Activity 是否注册？\u003c/li\u003e\n\u003cli\u003eActivity 是业务失败、Timeout、Heartbeat 丢失还是 Retry？\u003c/li\u003e\n\u003cli\u003e副作用是否可能已经成功，但完成记录丢失？\u003c/li\u003e\n\u003cli\u003e是否需要幂等、对账或补偿？\u003c/li\u003e\n\u003cli\u003e新代码是否与旧 History 产生 NDE？\u003c/li\u003e\n\u003cli\u003eHistory 是否应该 Continue-As-New？\u003c/li\u003e\n\u003cli\u003ePersistence latency、lock、vacuum、连接池是否异常？\u003c/li\u003e\n\u003c/ol\u003e\n\u003ch2 id=\"卖的不是思想而是承担可靠性责任\"\u003e卖的不是思想，而是承担可靠性责任\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#卖的不是思想而是承担可靠性责任\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003eTemporal 的核心 Workflow 能力在 Self-hosted 版本中基本完整。Temporal Cloud 主要把成熟思想背后的运维责任产品化。\u003c/p\u003e\n\u003cp\u003e商业价值不是解锁高级 Workflow API，而是替客户承担一个已经进入关键业务路径的有状态系统。\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eDurable Log 的 HA、备份与扩容\u003c/li\u003e\n\u003cli\u003eSchema Migration 与 Server Upgrade\u003c/li\u003e\n\u003cli\u003e跨区灾备与 SLA\u003c/li\u003e\n\u003cli\u003eRetention、Visibility 与 Capacity\u003c/li\u003e\n\u003cli\u003e安全治理、审计与专家支持\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003e研究快照 / 2026.07.20\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003e2025 ARR \u003e USD 100M（公开报道）\u003c/li\u003e\n\u003cli\u003e2025.03：2,500+ Cloud 客户，NDR 184%\u003c/li\u003e\n\u003cli\u003e2026.02：Series D USD 300M，估值 USD 5B\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2 id=\"来源与延伸阅读\"\u003e来源与延伸阅读\u003ca class=\"heading-anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#来源与延伸阅读\"\u003e#\u003c/a\u003e\u003c/h2\u003e\n\u003cp\u003e以下材料提供了本文使用的系统设计与 Temporal 背景。\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003e\u003ca href=\"https://www.postgresql.org/docs/current/wal-intro.html\"\u003ePostgreSQL · Write-Ahead Log\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://martinfowler.com/eaaDev/EventSourcing.html\"\u003eMartin Fowler · Event Sourcing\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://docs.temporal.io/workflows\"\u003eTemporal · Workflows\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://docs.temporal.io/encyclopedia/event-history\"\u003eTemporal · Event History\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://docs.temporal.io/activities\"\u003eTemporal · Activities\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://docs.temporal.io/task-queue\"\u003eTemporal · Task Queues\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://docs.temporal.io/workflow-execution/versioning\"\u003eTemporal · Versioning\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://cloud.google.com/alloydb/docs/overview\"\u003eGoogle Cloud · AlloyDB\u003c/a\u003e\u003c/li\u003e\n\u003cli\u003e\u003ca href=\"https://temporal.io/cloud\"\u003eTemporal Cloud\u003c/a\u003e\u003c/li\u003e\n\u003c/ul\u003e","toc":[{"id":"可靠执行的共同公式","text":"可靠执行的共同公式","depth":2},{"id":"任何-durable-system-都要回答五个问题","text":"任何 Durable System 都要回答五个问题","depth":2},{"id":"01--write-ahead-log","text":"01 · Write-Ahead Log","depth":2},{"id":"02--event-sourcing","text":"02 · Event Sourcing","depth":2},{"id":"03--deterministic-state-machine","text":"03 · Deterministic State Machine","depth":2},{"id":"04--reliable-delivery","text":"04 · Reliable Delivery","depth":2},{"id":"05--at-least-once--idempotency","text":"05 · At-least-once + Idempotency","depth":2},{"id":"06--process-manager--saga","text":"06 · Process Manager / Saga","depth":2},{"id":"07--checkpoint--compaction","text":"07 · Checkpoint \u0026 Compaction","depth":2},{"id":"08--compatible-evolution","text":"08 · Compatible Evolution","depth":2},{"id":"temporal-如何把成熟思想组合成-runtime","text":"Temporal 如何把成熟思想组合成 Runtime","depth":2},{"id":"组件只是原则的载体","text":"组件只是原则的载体","depth":3},{"id":"temporal-没有解决什么","text":"Temporal 没有解决什么","depth":2},{"id":"agent-opus这些原则的具体实践","text":"Agent Opus：这些原则的具体实践","depth":2},{"id":"screenplayhuman-in-the-loop-process-manager","text":"Screenplay：Human-in-the-loop Process Manager","depth":3},{"id":"uip更动态的-durable-agent-runtime","text":"UIP：更动态的 Durable Agent Runtime","depth":3},{"id":"task-queue资源隔离","text":"Task Queue：资源隔离","depth":3},{"id":"repository-的-replay-纪律","text":"Repository 的 Replay 纪律","depth":3},{"id":"可靠原则最终落到存储层","text":"可靠原则最终落到存储层","depth":2},{"id":"alloydb-带来的基础层收益","text":"AlloyDB 带来的基础层收益","depth":3},{"id":"它仍然不解决","text":"它仍然不解决","depth":3},{"id":"什么时候值得引入这种编程模型","text":"什么时候值得引入这种编程模型","depth":2},{"id":"适合","text":"适合","depth":3},{"id":"不适合","text":"不适合","depth":3},{"id":"从基本原则出发的调试顺序","text":"从基本原则出发的调试顺序","depth":2},{"id":"卖的不是思想而是承担可靠性责任","text":"卖的不是思想，而是承担可靠性责任","depth":2},{"id":"来源与延伸阅读","text":"来源与延伸阅读","depth":2}]},"newer":null,"older":{"href":"/notes/2026-07-02-13f-institutional-holdings-volatility","title":"20 家主流机构最近三年 13F 持仓波动观察","external":false}},"__N_SSG":true},"page":"/notes/[slug]","query":{"slug":"from-logs-to-durable-execution"},"buildId":"pJkIjlefRC651m5PqrGjM","isFallback":false,"gsp":true,"scriptLoader":[]}</script></body></html>
