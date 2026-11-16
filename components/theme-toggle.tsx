@@ -1,37 +1,15 @@
-import { useThemeMode, type ThemeMode } from '@/lib/use-theme-mode'
+import { useThemeMode } from '@/lib/use-theme-mode'
 
-type ThemeToggleProps = {
-  containerClassName: string
-  buttonClassName: string
-  activeButtonClassName: string
-}
-
-const options: Array<{ key: ThemeMode; label: string }> = [
-  { key: 'system', label: 'Auto' },
-  { key: 'light', label: 'Day' },
-  { key: 'dark', label: 'Night' },
-]
-
-export function ThemeToggle({
-  containerClassName,
-  buttonClassName,
-  activeButtonClassName,
-}: ThemeToggleProps) {
-  const { mode, setMode } = useThemeMode()
+export function ThemeToggle({ className }: { className?: string }) {
+  const { resolvedTheme, toggle } = useThemeMode()
+  const label = resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
 
   return (
-    <div className={containerClassName} role="group" aria-label="Color theme">
-      {options.map((option) => (
-        <button
-          key={option.key}
-          type="button"
-          onClick={() => setMode(option.key)}
-          className={`${buttonClassName} ${mode === option.key ? activeButtonClassName : ''}`}
-          aria-pressed={mode === option.key}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+    <button type="button" className={className} onClick={toggle} aria-label={label} title={label}>
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+        <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor" />
+      </svg>
+    </button>
   )
 }

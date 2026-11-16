@@ -1,20 +1,25 @@
 import type { GetStaticPaths, GetStaticProps } from 'next'
 import Head from 'next/head'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { Article, ArticleHeader, DateMargin, Prose, type Neighbour } from '@/components/article'
 import { getArtifactDefinition, type ArtifactDefinition } from '@/components/artifacts/registry'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { formatDate } from '@/lib/date'
-import { getNoteBySlug, getNoteSlugs, type NoteEntry } from '@/lib/content'
-import { renderMarkdownToHtml } from '@/lib/markdown'
+import { Layout } from '@/components/layout'
+import { getAllNotesMeta, getNoteBySlug, getNoteSlugs, type NoteEntry } from '@/lib/content'
+import { renderMarkdown, type TocItem } from '@/lib/markdown'
 import { site } from '@/lib/site'
-import styles from '@/styles/Content.module.css'
+import grid from '@/styles/Site.module.css'
+import styles from '@/styles/Article.module.css'
 
 type NoteDetailPageProps = {
   note: Omit<NoteEntry, 'body'> & {
     html: string
+    toc: TocItem[]
   }
+  newer: Neighbour | null
+  older: Neighbour | null
 }
+
+const tagHref = (tag: string) => `/notes?tag=${encodeURIComponent(tag)}`
 
 function renderArtifact(
   note: NoteDetailPageProps['note'],
@@ -26,15 +31,10 @@ function renderArtifact(
     return <ArtifactComponent note={note} productionUrl={productionUrl} />
   }
 
-  return (
-    <section
-      className={styles.content}
-      dangerouslySetInnerHTML={{ __html: note.html }}
-    />
-  )
+  return <Prose html={note.html} />
 }
 
-function NoteHead({ note }: NoteDetailPageProps) {
+function NoteHead({ note }: Pick<NoteDetailPageProps, 'note'>) {
   return (
     <Head>
       <title>{`${note.title} | ${site.name}`}</title>
@@ -49,228 +49,97 @@ function NoteHead({ note }: NoteDetailPageProps) {
   )
 }
 
-function SiteTopbar() {
-  return (
-    <header className={styles.topbar}>
-      <Link href="/" className={styles.brand}>
-        {site.name}
-      </Link>
-      <nav className={styles.nav}>
-        <Link href="/notes">Notes</Link>
-        <Link href="/demos">Demos</Link>
-        <a href={site.linkedin} target="_blank" rel="noreferrer">
-          LinkedIn
-        </a>
-      </nav>
-      <ThemeToggle
-        containerClassName={styles.themeToggle}
-        buttonClassName={styles.themeButton}
-        activeButtonClassName={styles.themeButtonActive}
-      />
-    </header>
-  )
-}
-
-function ArtifactTopbar({ note }: NoteDetailPageProps) {
-  return (
-    <header className={styles.artifactTopbar}>
-      <Link href="/" className={styles.brand}>
-        {site.name}
-      </Link>
-      <div className={styles.artifactAddress} aria-label="Hosted page path">
-        <span>Hosted HTML</span>
-        <strong>/notes/{note.slug}</strong>
-      </div>
-      <nav className={styles.nav}>
-        <Link href="/notes">Notes</Link>
-        <Link href="/demos">Demos</Link>
-        <a href={site.linkedin} target="_blank" rel="noreferrer">
-          LinkedIn
-        </a>
-      </nav>
-      <ThemeToggle
-        containerClassName={styles.themeToggle}
-        buttonClassName={styles.themeButton}
-        activeButtonClassName={styles.themeButtonActive}
-      />
-    </header>
-  )
-}
-
-function ArtifactNotes({
-  note,
-  heading,
-}: NoteDetailPageProps & {
-  heading?: string
-}) {
+/** The written notes that accompany an interactive report. */
+function ArtifactNotes({ note, heading }: Pick<NoteDetailPageProps, 'note'> & { heading?: string }) {
   if (!note.html) {
     return null
   }
 
   return (
-    <section className={styles.artifactNotes}>
-      <div>
-        <p className={styles.label}>Research notes</p>
-        <h2>{heading || 'Notes and implementation details.'}</h2>
+    <section className={`${grid.grid} ${grid.stack} ${styles.artifactNotes}`}>
+      <DateMargin date={note.date} />
+      <div className={grid.body}>
+        <h2>{heading || 'Notes'}</h2>
+        <Prose html={note.html} />
       </div>
-      <section
-        className={styles.content}
-        dangerouslySetInnerHTML={{ __html: note.html }}
-      />
     </section>
   )
 }
 
-function BrowserArtifactPage({
-  note,
-  artifact,
-  productionUrl,
-}: NoteDetailPageProps & {
+type ArtifactPageProps = Pick<NoteDetailPageProps, 'note'> & {
   artifact: ArtifactDefinition | null
   productionUrl: string
-}) {
+}
+
+/** `browser` chrome: the site introduces the report, then shows it in a frame. */
+function FramedArtifactPage({ note, artifact, productionUrl }: ArtifactPageProps) {
   return (
-    <>
+    <Layout wide>
       <NoteHead note={note} />
-      <main className={`${styles.page} ${styles.artifactPage}`}>
-        <ArtifactTopbar note={note} />
-
-        <article className={styles.artifactShell}>
-          <section className={styles.artifactHero}>
-            <div>
-              <Link href="/notes" className={styles.backLink}>
-                Back to notes
-              </Link>
-              <p className={styles.label}>GitHub-hosted artifact</p>
-              <h1>{note.title}</h1>
-              <p>{note.summary}</p>
-              <div className={styles.articleMeta}>
-                <span>{formatDate(note.date)}</span>
-                {note.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <aside className={styles.artifactRoutePanel}>
-              <span>Production URL</span>
-              <a href={productionUrl}>{productionUrl.replace('https://', '')}</a>
-              <p>Static export, shareable as a standalone hosted page.</p>
-            </aside>
-          </section>
-
-          <section className={styles.artifactStage} aria-label="Hosted artifact">
-            <div className={styles.artifactStageBar}>
-              <span className={styles.windowDots} aria-hidden>
-                <i />
-                <i />
-                <i />
-              </span>
-              <span>{artifact?.label || note.artifact || 'html-artifact'}</span>
-              <a href={productionUrl}>Open canonical</a>
-            </div>
-            <div className={styles.artifactCanvas}>
-              {renderArtifact(note, artifact, productionUrl)}
-            </div>
-          </section>
-
-          <ArtifactNotes note={note} heading={artifact?.notesHeading} />
-        </article>
-      </main>
-    </>
+      <div className={`${grid.grid} ${grid.stack} ${styles.artifactHead}`}>
+        <DateMargin date={note.date} />
+        <div className={grid.body}>
+          <ArticleHeader title={note.title} summary={note.summary} tags={note.tags} tagHref={tagHref} />
+        </div>
+      </div>
+      <section className={styles.frame} aria-label={artifact?.label || note.title}>
+        {renderArtifact(note, artifact, productionUrl)}
+      </section>
+      <ArtifactNotes note={note} heading={artifact?.notesHeading} />
+    </Layout>
   )
 }
 
-function ImmersiveArtifactPage({
-  note,
-  artifact,
-  productionUrl,
-}: NoteDetailPageProps & {
-  artifact: ArtifactDefinition | null
-  productionUrl: string
-}) {
+/** `immersive` chrome: the report owns the page below the site header. */
+function ImmersiveArtifactPage({ note, artifact, productionUrl }: ArtifactPageProps) {
   return (
-    <>
-      <NoteHead note={note} />
-      <main className={`${styles.page} ${styles.artifactPage}`}>
-        <ArtifactTopbar note={note} />
-        <article className={styles.immersiveArtifactShell}>
-          {renderArtifact(note, artifact, productionUrl)}
-          <ArtifactNotes note={note} heading={artifact?.notesHeading} />
-        </article>
-      </main>
-    </>
-  )
-}
-
-function CustomArtifactPage({
-  note,
-  artifact,
-  productionUrl,
-}: NoteDetailPageProps & {
-  artifact: ArtifactDefinition | null
-  productionUrl: string
-}) {
-  return (
-    <>
+    <Layout wide>
       <NoteHead note={note} />
       {renderArtifact(note, artifact, productionUrl)}
-    </>
+      <ArtifactNotes note={note} heading={artifact?.notesHeading} />
+    </Layout>
   )
 }
 
-function ArticleNotePage({ note }: NoteDetailPageProps) {
-  return (
-    <>
-      <NoteHead note={note} />
-      <main className={styles.page}>
-        <SiteTopbar />
-
-        <article className={styles.shell}>
-          <section className={styles.article}>
-            <Link href="/notes" className={styles.backLink}>
-              Back to notes
-            </Link>
-            <h1 className={styles.articleTitle}>{note.title}</h1>
-            <p className={styles.articleSummary}>{note.summary}</p>
-            <div className={styles.articleMeta}>
-              <span>{formatDate(note.date)}</span>
-              {note.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <section
-              className={styles.content}
-              dangerouslySetInnerHTML={{ __html: note.html }}
-            />
-          </section>
-        </article>
-      </main>
-    </>
-  )
-}
-
-export default function NoteDetailPage({ note }: NoteDetailPageProps) {
+export default function NoteDetailPage({ note, newer, older }: NoteDetailPageProps) {
   if (note.layout === 'artifact') {
     const artifact = getArtifactDefinition(note.artifact)
     const productionUrl = `${site.url}/notes/${note.slug}`
     const chrome = note.artifactChrome || artifact?.chrome || 'browser'
 
     if (chrome === 'custom') {
-      return <CustomArtifactPage note={note} artifact={artifact} productionUrl={productionUrl} />
+      return (
+        <>
+          <NoteHead note={note} />
+          {renderArtifact(note, artifact, productionUrl)}
+        </>
+      )
     }
 
     if (chrome === 'immersive') {
       return <ImmersiveArtifactPage note={note} artifact={artifact} productionUrl={productionUrl} />
     }
 
-    return <BrowserArtifactPage note={note} artifact={artifact} productionUrl={productionUrl} />
+    return <FramedArtifactPage note={note} artifact={artifact} productionUrl={productionUrl} />
   }
 
-  return <ArticleNotePage note={note} />
+  return (
+    <Layout>
+      <NoteHead note={note} />
+      <Article
+        title={note.title}
+        date={note.date}
+        summary={note.summary}
+        tags={note.tags}
+        tagHref={tagHref}
+        html={note.html}
+        toc={note.toc}
+        newer={newer}
+        older={older}
+        back={{ href: '/notes', label: 'All notes' }}
+      />
+    </Layout>
+  )
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -293,7 +162,13 @@ export const getStaticProps: GetStaticProps<NoteDetailPageProps> = async ({ para
     return { notFound: true }
   }
 
-  const html = await renderMarkdownToHtml(note.body)
+  const { html, toc } = await renderMarkdown(note.body)
+
+  // Notes are sorted newest first, so the previous entry in the list is newer.
+  const allNotes = getAllNotesMeta()
+  const index = allNotes.findIndex((entry) => entry.href === note.href)
+  const toNeighbour = (entry: (typeof allNotes)[number] | undefined): Neighbour | null =>
+    entry ? { href: entry.href, title: entry.title, external: entry.source === 'site' } : null
 
   return {
     props: {
@@ -310,7 +185,10 @@ export const getStaticProps: GetStaticProps<NoteDetailPageProps> = async ({ para
         ...(note.artifact ? { artifact: note.artifact } : {}),
         ...(note.artifactChrome ? { artifactChrome: note.artifactChrome } : {}),
         html,
+        toc,
       },
+      newer: index > 0 ? toNeighbour(allNotes[index - 1]) : null,
+      older: index >= 0 ? toNeighbour(allNotes[index + 1]) : null,
     },
   }
 }

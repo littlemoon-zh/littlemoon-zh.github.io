@@ -15,6 +15,7 @@
     "hosted-sites": "node scripts/build-hosted-sites.js"
   },
   "dependencies": {
+    "@fontsource-variable/newsreader": "^5.3.0",
     "@types/node": "^20.19.41",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",

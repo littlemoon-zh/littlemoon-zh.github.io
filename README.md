@@ -66,7 +66,7 @@ draft: false
 
 Artifact notes use the same `/notes/yyyy-mm-dd-title` URL pattern, but render inside a standalone hosted page shell. `artifactChrome` can be:
 
-- `browser`: shared hosted shell with browser-like frame
+- `browser`: site header, the note's title and summary, then the artifact in a bordered frame
 - `immersive`: shared top bar, artifact controls the main page layout
 - `custom`: artifact component controls the whole page surface
 
@@ -135,6 +135,15 @@ npm run new:site -- --slug your-html-site-slug --title "Custom title"
 ```
 
 Use `npm run build` and preview `out/` to test hosted HTML sites locally. `next dev` lists hosted HTML entries, but standalone HTML files are copied only by the production build.
+
+## Design
+
+Typography-first, two colours: a midnight ink and a moonlight gold used only as a highlighter. Tokens live in `styles/globals.css`.
+
+- Every page hangs on one grid (`.grid` in `styles/Site.module.css`): a gutter for dates, a reading column, and an aside.
+- Each note is marked with the moon phase on the day it was written (`lib/moon.ts`, `components/moon.tsx`). The header logo and the home page show tonight's phase.
+- Home lists the most recent notes with summaries. `/notes` is the full archive: one line per note, grouped by year, with search and `?tag=` filtering.
+- Home page copy (`tagline`, `intro`) is in `lib/site.ts`.
 
 ## Routes
 

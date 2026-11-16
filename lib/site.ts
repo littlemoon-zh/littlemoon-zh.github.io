@@ -11,6 +11,10 @@ export const site = {
   chineseDescription:
     '一个个人站点：一部分放可直接访问的研究报告和工程笔记，一部分放视频 AI 与个人作品 demo。',
   image: '/hero-workspace.jpg',
+  // Home page copy.
+  tagline: 'If I can’t explain it, I don’t understand it yet.',
+  intro:
+    'I’m Yuhang Xiao, an AI engineer. This is my public notebook: AI engineering, how models work inside, and the occasional study built on data.',
 }
 
 export const focusAreas = [

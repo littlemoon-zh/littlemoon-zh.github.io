@@ -9,22 +9,72 @@ import rehypePrettyCode, { type Options as RehypePrettyCodeOptions } from 'rehyp
 import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
 
+export type TocItem = {
+  id: string
+  text: string
+  depth: 2 | 3
+}
+
+export type RenderedMarkdown = {
+  html: string
+  toc: TocItem[]
+}
+
+type HastNode = {
+  type: string
+  tagName?: string
+  value?: string
+  properties?: Record<string, unknown>
+  children?: HastNode[]
+}
+
 const prettyCodeOptions: RehypePrettyCodeOptions = {
   theme: {
     light: 'github-light',
     dark: 'github-dark',
   },
-  keepBackground: true,
+  keepBackground: false,
   defaultLang: 'text',
 }
 
-export async function renderMarkdownToHtml(markdown: string): Promise<string> {
+function textOf(node: HastNode): string {
+  if (node.type === 'text') {
+    return node.value || ''
+  }
+
+  return (node.children || []).map(textOf).join('')
+}
+
+/** Collects h2/h3 headings. Must run after rehype-slug and before anchors are appended. */
+function collectToc(toc: TocItem[]) {
+  return () => (tree: HastNode) => {
+    const visit = (node: HastNode) => {
+      if (node.type === 'element' && (node.tagName === 'h2' || node.tagName === 'h3')) {
+        const id = node.properties?.id
+        const text = textOf(node).trim()
+
+        if (typeof id === 'string' && text) {
+          toc.push({ id, text, depth: node.tagName === 'h2' ? 2 : 3 })
+        }
+      }
+
+      node.children?.forEach(visit)
+    }
+
+    visit(tree)
+  }
+}
+
+export async function renderMarkdown(markdown: string): Promise<RenderedMarkdown> {
+  const toc: TocItem[] = []
+
   const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMath)
     .use(remarkRehype)
     .use(rehypeSlug)
+    .use(collectToc(toc))
     .use(rehypeAutolinkHeadings, {
       behavior: 'append',
       properties: {
@@ -42,5 +92,5 @@ export async function renderMarkdownToHtml(markdown: string): Promise<string> {
     .use(rehypeStringify)
     .process(markdown)
 
-  return String(file)
+  return { html: String(file), toc }
 }

@@ -1,0 +1,454 @@
+/*
+ * Article pages: the note's date and moon sit in the gutter, the text in the
+ * reading column, and the outline in the aside. The grid itself comes from
+ * Site.module.css.
+ */
+
+.margin {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 0.3rem;
+  padding-top: 0.55rem;
+  color: var(--faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.margin svg {
+  margin-bottom: 0.45rem;
+  filter: drop-shadow(0 0 12px var(--moon-glow));
+}
+
+.margin time {
+  color: var(--muted);
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 4.6vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+
+.summary {
+  margin-top: 1.1rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.85;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-top: 1.1rem;
+  color: var(--faint);
+  font-size: 0.84rem;
+  list-style: none;
+}
+
+.tags a {
+  transition: color 150ms ease;
+}
+
+.tags a:hover {
+  color: var(--ink);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.links a,
+.back {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.28em;
+}
+
+.head {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Outline */
+
+.toc {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 0.55rem;
+  scrollbar-width: none;
+}
+
+.toc h2 {
+  margin-bottom: 0.75rem;
+  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.toc ol {
+  list-style: none;
+}
+
+.toc a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 0.85rem;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.toc li[data-depth='3'] a {
+  padding-left: 1.7rem;
+  color: var(--faint);
+}
+
+.toc a:hover {
+  color: var(--ink);
+}
+
+.toc a[aria-current='location'] {
+  border-left-color: var(--gold);
+  color: var(--ink);
+}
+
+/* Prose */
+
+.prose {
+  padding-top: 1.25rem;
+  color: var(--article-ink);
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  overflow-wrap: break-word;
+}
+
+.prose :global(h1) {
+  display: none;
+}
+
+.prose :global(h2),
+.prose :global(h3),
+.prose :global(h4) {
+  color: var(--ink);
+  scroll-margin-top: 1.5rem;
+  text-wrap: balance;
+}
+
+.prose :global(h2) {
+  margin: 2.6em 0 0.8em;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.prose :global(h3) {
+  margin: 2.1em 0 0.6em;
+  font-size: 1.14rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.prose :global(h4) {
+  margin: 1.8em 0 0.5em;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.prose :global(p),
+.prose :global(ul),
+.prose :global(ol),
+.prose :global(blockquote),
+.prose :global(figure),
+.prose :global(table),
+.prose :global(.katex-display) {
+  margin: 1.1em 0;
+}
+
+.prose :global(ul),
+.prose :global(ol) {
+  padding-left: 1.4em;
+}
+
+.prose :global(li) {
+  padding-left: 0.2em;
+}
+
+.prose :global(li + li),
+.prose :global(li > ul),
+.prose :global(li > ol) {
+  margin-top: 0.35em;
+  margin-bottom: 0;
+}
+
+.prose :global(li::marker) {
+  color: var(--faint);
+}
+
+.prose :global(strong) {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.prose :global(a) {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.28em;
+  transition: background-color 150ms ease;
+}
+
+.prose :global(a:hover) {
+  background-color: var(--highlight);
+}
+
+.prose :global(blockquote) {
+  padding-left: 1.2em;
+  border-left: 2px solid var(--gold);
+  color: var(--muted);
+}
+
+.prose :global(hr) {
+  width: 3rem;
+  height: 1px;
+  margin: 3em 0;
+  border: 0;
+  background: var(--line-strong);
+}
+
+.prose :global(img) {
+  height: auto;
+  border-radius: 6px;
+}
+
+.prose :global(table) {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.prose :global(th),
+.prose :global(td) {
+  padding: 0.6em 1em 0.6em 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose :global(th) {
+  border-bottom-color: var(--line-strong);
+  color: var(--ink);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.prose :global(.katex-display) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.2em;
+}
+
+/* Code. Shiki ships both themes as CSS variables on every token. */
+
+.prose :global(code) {
+  font-family: var(--font-mono);
+}
+
+.prose :global(:not(pre) > code) {
+  padding: 0.12em 0.38em;
+  border-radius: 4px;
+  background: var(--inline-code-bg);
+  color: var(--inline-code-text);
+  font-size: 0.86em;
+}
+
+.prose :global(figure[data-rehype-pretty-code-figure]),
+.prose :global(pre) {
+  margin: 1.5em 0;
+}
+
+.prose :global(figure[data-rehype-pretty-code-figure] pre) {
+  margin: 0;
+}
+
+.prose :global(pre) {
+  overflow-x: auto;
+  padding: 1.05rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-size: 0.85rem;
+  line-height: 1.75;
+  tab-size: 2;
+}
+
+.prose :global(pre code span) {
+  color: var(--shiki-light);
+}
+
+:global(html[data-theme='dark']) .prose :global(pre code span) {
+  color: var(--shiki-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not([data-theme='light'])) .prose :global(pre code span) {
+    color: var(--shiki-dark);
+  }
+}
+
+.prose :global(.heading-anchor) {
+  margin-left: 0.4em;
+  color: var(--faint);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  opacity: 0;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.prose :global(.heading-anchor:hover) {
+  background: none;
+  color: var(--accent);
+}
+
+.prose :global(h2:hover .heading-anchor),
+.prose :global(h3:hover .heading-anchor) {
+  opacity: 1;
+}
+
+/* Neighbours */
+
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 4.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.pager a {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+}
+
+.newer {
+  grid-column: 1;
+}
+
+.older {
+  grid-column: 2;
+  text-align: right;
+}
+
+.pager small {
+  color: var(--faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.pager span {
+  text-wrap: balance;
+  font-family: var(--font-serif);
+  font-size: 1.08rem;
+  line-height: 1.5;
+  transition: color 150ms ease;
+}
+
+.pager a:hover span {
+  color: var(--accent);
+}
+
+.back {
+  display: inline-block;
+  margin-top: 2.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Interactive reports */
+
+.artifactHead {
+  margin-bottom: 2.5rem;
+}
+
+.frame {
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.artifactNotes {
+  margin-top: clamp(3rem, 8vw, 5rem);
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.artifactNotes h2 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .margin {
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    gap: 0.6rem;
+    padding-top: 0;
+    margin-bottom: 1.25rem;
+  }
+
+  .margin svg {
+    margin-bottom: 0;
+  }
+
+  .prose {
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+
+  .pager {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .older {
+    grid-column: 1;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toc a,
+  .prose :global(a),
+  .prose :global(.heading-anchor),
+  .pager span {
+    transition: none;
+  }
+}

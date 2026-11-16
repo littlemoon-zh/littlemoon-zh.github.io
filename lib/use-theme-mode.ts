@@ -1,35 +1,32 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
+type ResolvedTheme = 'light' | 'dark'
 
-const THEME_STORAGE_KEY = 'littlemoon:theme-mode'
+export const THEME_STORAGE_KEY = 'littlemoon:theme-mode'
+const THEME_EVENT_NAME = 'littlemoon:theme-mode-change'
+const DARK_QUERY = '(prefers-color-scheme: dark)'
 
-function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') {
-    return 'light'
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
+/**
+ * Runs in <head> before first paint so a stored choice never flashes the
+ * other theme. Keep it in sync with `applyTheme`.
+ */
+export const themeInitScript = `(function(){try{var m=localStorage.getItem('${THEME_STORAGE_KEY}');if(m==='light'||m==='dark'){var r=document.documentElement;r.setAttribute('data-theme',m);r.style.colorScheme=m}}catch(e){}})()`
 
 function getStoredMode(): ThemeMode {
-  if (typeof window === 'undefined') {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
+    return stored === 'light' || stored === 'dark' ? stored : 'system'
+  } catch {
     return 'system'
   }
-
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
 }
 
-function getThemeEventName() {
-  return 'littlemoon:theme-mode-change'
+function getSystemTheme(): ResolvedTheme {
+  return window.matchMedia(DARK_QUERY).matches ? 'dark' : 'light'
 }
 
 function applyTheme(mode: ThemeMode) {
-  if (typeof document === 'undefined') {
-    return
-  }
-
   const root = document.documentElement
 
   if (mode === 'system') {
@@ -42,50 +39,54 @@ function applyTheme(mode: ThemeMode) {
   root.style.colorScheme = mode
 }
 
+function subscribe(onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia(DARK_QUERY)
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY) {
+      onStoreChange()
+    }
+  }
+
+  mediaQuery.addEventListener('change', onStoreChange)
+  window.addEventListener('storage', handleStorage)
+  window.addEventListener(THEME_EVENT_NAME, onStoreChange)
+
+  return () => {
+    mediaQuery.removeEventListener('change', onStoreChange)
+    window.removeEventListener('storage', handleStorage)
+    window.removeEventListener(THEME_EVENT_NAME, onStoreChange)
+  }
+}
+
 export function useThemeMode() {
-  const subscribe = useCallback((onStoreChange: () => void) => {
-    if (typeof window === 'undefined') {
-      return () => {}
-    }
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const customEventName = getThemeEventName()
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === THEME_STORAGE_KEY) {
-        onStoreChange()
-      }
-    }
-
-    mediaQuery.addEventListener('change', onStoreChange)
-    window.addEventListener('storage', handleStorage)
-    window.addEventListener(customEventName, onStoreChange)
-
-    return () => {
-      mediaQuery.removeEventListener('change', onStoreChange)
-      window.removeEventListener('storage', handleStorage)
-      window.removeEventListener(customEventName, onStoreChange)
-    }
-  }, [])
-
   const mode = useSyncExternalStore<ThemeMode>(subscribe, getStoredMode, () => 'system')
+  const systemTheme = useSyncExternalStore<ResolvedTheme>(subscribe, getSystemTheme, () => 'light')
+  const resolvedTheme: ResolvedTheme = mode === 'system' ? systemTheme : mode
 
   useEffect(() => {
     applyTheme(mode)
   }, [mode])
 
   const setMode = useCallback((nextMode: ThemeMode) => {
-    if (typeof window === 'undefined') {
-      return
+    try {
+      if (nextMode === 'system') {
+        window.localStorage.removeItem(THEME_STORAGE_KEY)
+      } else {
+        window.localStorage.setItem(THEME_STORAGE_KEY, nextMode)
+      }
+    } catch {
+      // Storage can be blocked; the choice then lasts for this page only.
     }
 
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextMode)
     applyTheme(nextMode)
-    window.dispatchEvent(new Event(getThemeEventName()))
+    window.dispatchEvent(new Event(THEME_EVENT_NAME))
   }, [])
 
-  return {
-    mode,
-    setMode,
-    resolvedTheme: mode === 'system' ? getSystemTheme() : mode,
-  }
+  /** Flip light/dark. Landing back on the system's own theme clears the override. */
+  const toggle = useCallback(() => {
+    const next: ResolvedTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
+    setMode(next === getSystemTheme() ? 'system' : next)
+  }, [resolvedTheme, setMode])
+
+  return { mode, setMode, resolvedTheme, toggle }
 }

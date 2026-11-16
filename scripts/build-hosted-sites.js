@@ -5,19 +5,10 @@ const path = require('path')
 
 const CONTENT_SITES_DIR = path.join(process.cwd(), 'content', 'sites')
 const OUT_NOTES_DIR = path.join(process.cwd(), 'out', 'notes')
-const LINKEDIN_URL = 'https://www.linkedin.com/in/yuhang-xiao/'
+const GITHUB_URL = 'https://github.com/littlemoon-zh'
 
 function parseDraft(value) {
   return value === true || String(value).toLowerCase() === 'true'
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
 }
 
 function readMetadata(slug) {
@@ -81,6 +72,9 @@ function copySiteAssets(sourceDirectory, destinationDirectory) {
   }
 }
 
+// Standalone pages bring their own styles, so this bar is self-contained and
+// follows the page's light/dark scheme through system colours. Its layout
+// mirrors the header in components/layout.tsx.
 function siteChromeCss() {
   return `<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
@@ -92,22 +86,17 @@ function siteChromeCss() {
 }
 
 .lm-site-chrome {
-  position: sticky;
-  top: 0;
-  z-index: 2147483000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  min-height: 58px;
-  padding: 12px clamp(16px, 4vw, 44px);
-  border-bottom: 1px solid color-mix(in srgb, CanvasText 16%, transparent);
-  background: color-mix(in srgb, Canvas 92%, transparent);
+  gap: 24px;
+  width: min(84rem, 100% - 3rem);
+  margin: 0 auto;
+  padding: 28px 0;
   color: CanvasText;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
-  line-height: 1.3;
-  backdrop-filter: blur(14px);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14.5px;
+  line-height: 1;
 }
 
 .lm-site-chrome a {
@@ -116,29 +105,28 @@ function siteChromeCss() {
 }
 
 .lm-site-chrome__brand {
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: 22px;
+  font-style: italic;
 }
 
-.lm-site-chrome__path {
-  min-width: 0;
-  color: color-mix(in srgb, CanvasText 68%, transparent);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.lm-site-chrome__brand::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
 }
 
 .lm-site-chrome__nav {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: color-mix(in srgb, CanvasText 74%, transparent);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.lm-site-chrome__nav a {
-  padding: 6px 0;
+  gap: 24px;
+  color: color-mix(in srgb, CanvasText 62%, transparent);
 }
 
 .lm-site-chrome__nav a:hover,
@@ -146,30 +134,26 @@ function siteChromeCss() {
   color: CanvasText;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .lm-site-chrome {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
+    width: min(84rem, 100% - 2.5rem);
+    padding: 20px 0;
   }
 
   .lm-site-chrome__nav {
-    width: 100%;
-    justify-content: space-between;
+    gap: 18px;
   }
 }
 </style>`
 }
 
-function siteChromeMarkup(slug, metadata) {
+function siteChromeMarkup() {
   return `<header class="lm-site-chrome" data-littlemoon-site-chrome aria-label="Littlemoon site navigation">
   <a class="lm-site-chrome__brand" href="/">Littlemoon</a>
-  <div class="lm-site-chrome__path" title="${escapeHtml(metadata.title)}">/notes/${escapeHtml(slug)}/</div>
-  <nav class="lm-site-chrome__nav" aria-label="Primary navigation">
-    <a href="/">Home</a>
+  <nav class="lm-site-chrome__nav" aria-label="Primary">
     <a href="/notes" aria-current="page">Notes</a>
     <a href="/demos">Demos</a>
-    <a href="${LINKEDIN_URL}" target="_blank" rel="noreferrer">LinkedIn</a>
+    <a href="${GITHUB_URL}" target="_blank" rel="noreferrer">GitHub</a>
   </nav>
 </header>`
 }
@@ -188,7 +172,7 @@ function injectSiteChrome(html, slug, metadata) {
   }
 
   const withStyles = html.replace(/<\/head>/i, `${siteChromeCss()}\n</head>`)
-  return withStyles.replace(/<body([^>]*)>/i, `<body$1>\n${siteChromeMarkup(slug, metadata)}`)
+  return withStyles.replace(/<body([^>]*)>/i, `<body$1>\n${siteChromeMarkup()}`)
 }
 
 function buildHostedSite(slug) {

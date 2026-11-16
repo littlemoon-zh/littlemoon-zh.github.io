@@ -1,22 +1,22 @@
 import type { GetStaticPaths, GetStaticProps } from 'next'
 import Head from 'next/head'
-import Link from 'next/link'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { formatDate } from '@/lib/date'
+import { Article } from '@/components/article'
+import { Layout } from '@/components/layout'
 import { getDemoBySlug, getDemoSlugs, type DemoEntry } from '@/lib/content'
-import { renderMarkdownToHtml } from '@/lib/markdown'
+import { renderMarkdown, type TocItem } from '@/lib/markdown'
 import { site } from '@/lib/site'
-import styles from '@/styles/Content.module.css'
+import styles from '@/styles/Article.module.css'
 
 type DemoDetailPageProps = {
   demo: Omit<DemoEntry, 'body'> & {
     html: string
+    toc: TocItem[]
   }
 }
 
 export default function DemoDetailPage({ demo }: DemoDetailPageProps) {
   return (
-    <>
+    <Layout>
       <Head>
         <title>{`${demo.title} | ${site.name}`}</title>
         <meta name="description" content={demo.summary} />
@@ -27,74 +27,32 @@ export default function DemoDetailPage({ demo }: DemoDetailPageProps) {
         <meta property="og:url" content={`${site.url}/demos/${demo.slug}`} />
       </Head>
 
-      <main className={styles.page}>
-        <header className={styles.topbar}>
-          <Link href="/" className={styles.brand}>
-            {site.name}
-          </Link>
-          <nav className={styles.nav}>
-            <Link href="/notes">Notes</Link>
-            <Link href="/demos">Demos</Link>
-            <a href={site.linkedin} target="_blank" rel="noreferrer">
-              LinkedIn
-            </a>
-          </nav>
-          <ThemeToggle
-            containerClassName={styles.themeToggle}
-            buttonClassName={styles.themeButton}
-            activeButtonClassName={styles.themeButtonActive}
-          />
-        </header>
-
-        <article className={styles.shell}>
-          <section className={styles.article}>
-            <Link href="/demos" className={styles.backLink}>
-              Back to demos
-            </Link>
-            <h1 className={styles.articleTitle}>{demo.title}</h1>
-            <p className={styles.articleSummary}>{demo.summary}</p>
-            <div className={styles.articleMeta}>
-              <span>{formatDate(demo.date)}</span>
-              {demo.stack.map((item) => (
-                <span key={item} className={styles.tag}>
-                  {item}
-                </span>
-              ))}
+      <Article
+        title={demo.title}
+        date={demo.date}
+        summary={demo.summary}
+        tags={demo.stack}
+        html={demo.html}
+        toc={demo.toc}
+        back={{ href: '/demos', label: 'All demos' }}
+        headerExtra={
+          (demo.liveUrl || demo.repoUrl) && (
+            <div className={styles.links}>
+              {demo.liveUrl && (
+                <a href={demo.liveUrl} target="_blank" rel="noreferrer">
+                  Live demo ↗
+                </a>
+              )}
+              {demo.repoUrl && (
+                <a href={demo.repoUrl} target="_blank" rel="noreferrer">
+                  Source ↗
+                </a>
+              )}
             </div>
-
-            {(demo.liveUrl || demo.repoUrl) && (
-              <div className={styles.externalLinks}>
-                {demo.liveUrl && (
-                  <a
-                    href={demo.liveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.externalBtn}
-                  >
-                    Live Demo
-                  </a>
-                )}
-                {demo.repoUrl && (
-                  <a
-                    href={demo.repoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.externalBtn}
-                  >
-                    Source Code
-                  </a>
-                )}
-              </div>
-            )}
-
-            <section
-              className={styles.content}
-              dangerouslySetInnerHTML={{ __html: demo.html }}
-            />
-          </section>
-        </article>
-      </main>
-    </>
+          )
+        }
+      />
+    </Layout>
   )
 }
 
@@ -118,7 +76,7 @@ export const getStaticProps: GetStaticProps<DemoDetailPageProps> = async ({ para
     return { notFound: true }
   }
 
-  const html = await renderMarkdownToHtml(demo.body)
+  const { html, toc } = await renderMarkdown(demo.body)
 
   const demoProps: DemoDetailPageProps['demo'] = {
     slug: demo.slug,
@@ -128,6 +86,7 @@ export const getStaticProps: GetStaticProps<DemoDetailPageProps> = async ({ para
     draft: demo.draft,
     stack: demo.stack,
     html,
+    toc,
     ...(demo.liveUrl ? { liveUrl: demo.liveUrl } : {}),
     ...(demo.repoUrl ? { repoUrl: demo.repoUrl } : {}),
   }

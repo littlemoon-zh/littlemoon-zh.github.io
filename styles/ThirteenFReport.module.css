@@ -1,5 +1,5 @@
 .report {
-  margin: 36px 0 54px;
+  margin: 0 0 54px;
   color: var(--ink);
 }
 
@@ -8,8 +8,7 @@
   grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.78fr);
   gap: clamp(28px, 5vw, 64px);
   align-items: end;
-  padding: clamp(30px, 5vw, 52px) 0;
-  border-top: 1px solid var(--line-strong);
+  padding: 0 0 clamp(30px, 5vw, 52px);
   border-bottom: 1px solid var(--line-strong);
 }
 
@@ -31,7 +30,8 @@
 }
 
 .reportHero h2 {
-  font-size: clamp(2.8rem, 7vw, 7.2rem);
+  font-size: clamp(2rem, 4.6vw, 3rem);
+  line-height: 1.2;
 }
 
 .reportHero p:not(.eyebrow),
@@ -130,7 +130,8 @@
 
 .sectionHead h3 {
   max-width: 760px;
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.25;
 }
 
 .chartWrap {
@@ -411,7 +412,7 @@
   max-width: 760px;
   margin-top: 12px;
   color: var(--ink);
-  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
   line-height: 0.98;
 }
 
@@ -440,7 +441,7 @@
 .timelineHeader h4 {
   margin-top: 10px;
   color: var(--ink);
-  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
   line-height: 1.02;
 }
 
@@ -652,7 +653,7 @@
 .breakdownHeader h4 {
   margin-top: 10px;
   color: var(--ink);
-  font-size: clamp(1.45rem, 3vw, 2.4rem);
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
   line-height: 1.08;
 }
 

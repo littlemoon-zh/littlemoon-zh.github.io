@@ -350,6 +350,25 @@ export function getAllNotesMeta(): NoteMeta[] {
   return sortByDateDesc(entries)
 }
 
+export type TagCount = {
+  tag: string
+  count: number
+}
+
+/** Tags ordered by how many notes carry them, then alphabetically. */
+export function getTagCounts(notes: Pick<NoteMeta, 'tags'>[]): TagCount[] {
+  const counts = new Map<string, number>()
+
+  for (const note of notes) {
+    for (const tag of note.tags) {
+      counts.set(tag, (counts.get(tag) || 0) + 1)
+    }
+  }
+
+  return Array.from(counts, ([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+}
+
 export function getAllDemosMeta(): DemoMeta[] {
   const entries = listContentFiles('demos')
     .map<DemoMeta | null>((fileName) => {

@@ -1,146 +1,143 @@
 import type { GetStaticProps } from 'next'
 import Head from 'next/head'
-import Link from 'next/link'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { formatDate } from '@/lib/date'
-import { getAllNotesMeta, type NoteMeta } from '@/lib/content'
+import { useRouter } from 'next/router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Layout } from '@/components/layout'
+import { EntryList, noteToEntry, type ListEntry } from '@/components/note-list'
+import { getAllNotesMeta, getTagCounts, type TagCount } from '@/lib/content'
 import { site } from '@/lib/site'
-import { useStoredView } from '@/lib/use-stored-view'
-import styles from '@/styles/Content.module.css'
+import styles from '@/styles/Site.module.css'
 
 type NotesPageProps = {
-  notes: NoteMeta[]
+  notes: ListEntry[]
+  tags: TagCount[]
 }
 
-function noteTypeLabel(note: NoteMeta): string {
-  if (note.layout === 'site' || note.layout === 'artifact') {
-    return 'Hosted HTML'
+function matchesQuery(note: ListEntry, query: string): boolean {
+  const haystack = `${note.title} ${note.summary} ${note.tags.join(' ')}`.toLowerCase()
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((word) => haystack.includes(word))
+}
+
+export default function NotesPage({ notes, tags }: NotesPageProps) {
+  const router = useRouter()
+  const searchRef = useRef<HTMLInputElement>(null)
+  const [query, setQuery] = useState('')
+
+  // The selected tag lives in the URL (`/notes?tag=x`) so it can be linked to.
+  const tagParam = router.query.tag
+  const activeTag = typeof tagParam === 'string' ? tagParam : null
+
+  const setActiveTag = (tag: string | null) => {
+    router.replace(tag ? { pathname: '/notes', query: { tag } } : '/notes', undefined, {
+      shallow: true,
+      scroll: false,
+    })
   }
 
-  return 'Note'
-}
+  // Press "/" anywhere to jump to search.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const typing = target?.closest('input, textarea, [contenteditable="true"]')
 
-function NoteCard({ note }: { note: NoteMeta }) {
-  const content = (
-    <>
-      <p className={styles.meta}>
-        {formatDate(note.date)} / {noteTypeLabel(note)}
-      </p>
-      <h2>{note.title}</h2>
-      <p>{note.summary}</p>
-      {note.tags.length > 0 && (
-        <div className={styles.tags}>
-          {note.tags.map((tag) => (
-            <span key={tag} className={styles.tag}>
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-      <span className={styles.cardLink}>
-        {note.layout === 'article' ? 'Read' : 'Open'}
-      </span>
-    </>
+      if (event.key === '/' && !typing && !event.metaKey && !event.ctrlKey) {
+        event.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const visibleNotes = useMemo(
+    () =>
+      notes.filter(
+        (note) =>
+          (!activeTag || note.tags.includes(activeTag)) && (!query.trim() || matchesQuery(note, query)),
+      ),
+    [notes, activeTag, query],
   )
 
-  if (note.source === 'site') {
-    return (
-      <a href={note.href} className={styles.card}>
-        {content}
-      </a>
-    )
-  }
-
   return (
-    <Link href={note.href} className={styles.card}>
-      {content}
-    </Link>
-  )
-}
-
-export default function NotesPage({ notes }: NotesPageProps) {
-  const [view, setView] = useStoredView('littlemoon:notes:view')
-
-  return (
-    <>
+    <Layout>
       <Head>
         <title>{`Notes | ${site.name}`}</title>
-        <meta
-          name="description"
-          content="Hosted HTML notes, research reports, and engineering writeups."
-        />
+        <meta name="description" content={site.description} />
         <link rel="canonical" href={`${site.url}/notes`} />
         <meta property="og:title" content={`Notes | ${site.name}`} />
-        <meta property="og:description" content={site.chineseDescription} />
+        <meta property="og:description" content={site.description} />
       </Head>
 
-      <main className={styles.page}>
-        <header className={styles.topbar}>
-          <Link href="/" className={styles.brand}>
-            {site.name}
-          </Link>
-          <nav className={styles.nav}>
-            <Link href="/notes">Notes</Link>
-            <Link href="/demos">Demos</Link>
-            <a href={site.linkedin} target="_blank" rel="noreferrer">
-              LinkedIn
-            </a>
-          </nav>
-          <ThemeToggle
-            containerClassName={styles.themeToggle}
-            buttonClassName={styles.themeButton}
-            activeButtonClassName={styles.themeButtonActive}
+      <div className={`${styles.grid} ${styles.stack} ${styles.indexHead}`}>
+        <div className={styles.body}>
+          <h1>Notes</h1>
+          <p>
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'}, newest first. The moon beside each one is
+            the phase on the day it was written.
+          </p>
+
+          <input
+            ref={searchRef}
+            type="search"
+            className={styles.search}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search notes (press /)"
+            aria-label="Search notes"
           />
-        </header>
 
-        <div className={styles.shell}>
-          <section className={styles.header}>
-            <p className={styles.label}>Notes</p>
-            <h1>Hosted notes and research reports.</h1>
-            <p className={styles.subtitle}>
-              这里存放可直接访问的 HTML 文章：研究报告、工程笔记、数据可视化和长期复盘。
-            </p>
-            <div className={styles.viewControls} role="group" aria-label="Choose list layout">
+          {tags.length > 0 && (
+            <div className={styles.filters} role="group" aria-label="Filter by topic">
               <button
                 type="button"
-                className={`${styles.viewButton} ${
-                  view === 'cards' ? styles.viewButtonActive : ''
-                }`}
-                onClick={() => setView('cards')}
+                className={styles.filter}
+                aria-pressed={activeTag === null}
+                onClick={() => setActiveTag(null)}
               >
-                Cards
+                All
               </button>
-              <button
-                type="button"
-                className={`${styles.viewButton} ${
-                  view === 'rows' ? styles.viewButtonActive : ''
-                }`}
-                onClick={() => setView('rows')}
-              >
-                Rows
-              </button>
-            </div>
-          </section>
-
-          {notes.length > 0 ? (
-            <section className={`${styles.grid} ${view === 'rows' ? styles.rows : ''}`}>
-              {notes.map((note) => (
-                <NoteCard key={note.href} note={note} />
+              {tags.map(({ tag, count }) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={styles.filter}
+                  aria-pressed={activeTag === tag}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                >
+                  {tag}
+                  {count > 1 && <small>{count}</small>}
+                </button>
               ))}
-            </section>
-          ) : (
-            <section className={styles.empty}>No notes published yet.</section>
+            </div>
           )}
         </div>
-      </main>
-    </>
+      </div>
+
+      {visibleNotes.length > 0 ? (
+        <EntryList entries={visibleNotes} compact />
+      ) : (
+        <div className={`${styles.grid} ${styles.stack}`}>
+          <p className={`${styles.body} ${styles.empty}`}>
+            {notes.length > 0 ? 'No notes match.' : 'No notes yet.'}
+          </p>
+        </div>
+      )}
+    </Layout>
   )
 }
 
 export const getStaticProps: GetStaticProps<NotesPageProps> = async () => {
+  const notes = getAllNotesMeta()
+
   return {
     props: {
-      notes: getAllNotesMeta(),
+      notes: notes.map(noteToEntry),
+      tags: getTagCounts(notes),
     },
   }
 }

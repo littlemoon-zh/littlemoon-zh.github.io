@@ -1,0 +1,514 @@
+/*
+ * Page frame and index pages.
+ *
+ * Everything hangs on one three-column grid: a narrow gutter for dates and
+ * moons, a reading column, and a quiet aside. Pages reuse it through
+ * `.grid`, so the left edge of every title lines up across the site.
+ */
+.page {
+  --gutter: 6.5rem;
+  --gap: 1.75rem;
+  --measure: 42rem;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  width: min(70rem, 100% - 3rem);
+  margin-inline: auto;
+}
+
+.wide .container {
+  width: min(84rem, 100% - 3rem);
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.75rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.brand svg {
+  flex: none;
+  filter: drop-shadow(0 0 6px var(--moon-glow));
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.nav a {
+  transition: color 150ms ease;
+}
+
+.nav a:hover,
+.nav a[aria-current='page'] {
+  color: var(--ink);
+}
+
+.themeToggle {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  margin-inline: -0.25rem -0.5rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 150ms ease, transform 300ms ease;
+}
+
+.themeToggle:hover {
+  color: var(--ink);
+  transform: rotate(180deg);
+}
+
+/* Main and footer */
+
+.main {
+  flex: 1;
+  padding-block: clamp(2rem, 6vw, 4.5rem) clamp(4rem, 10vw, 7rem);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-block: 1.5rem 2.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 0.84rem;
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  color: var(--muted);
+}
+
+.footerLinks a {
+  transition: color 150ms ease;
+}
+
+.footerLinks a:hover {
+  color: var(--ink);
+}
+
+/* The shared grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, var(--measure)) minmax(0, 1fr);
+  column-gap: var(--gap);
+}
+
+.gutter {
+  grid-column: 1;
+}
+
+.body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.aside {
+  grid-column: 3;
+  justify-self: end;
+  width: min(100%, 13rem);
+  margin-left: 1.5rem;
+}
+
+/* Home: tonight's moon and a sentence */
+
+.hero {
+  align-items: start;
+  margin-bottom: clamp(3rem, 8vw, 5.5rem);
+}
+
+.tonight {
+  display: grid;
+  justify-items: start;
+  gap: 0.7rem;
+  padding-top: 0.2rem;
+  color: var(--faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.tonight svg {
+  filter: drop-shadow(0 0 22px var(--moon-glow));
+}
+
+.tagline {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 4.6vw, 2.7rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+
+.intro {
+  max-width: 34rem;
+  margin-top: 1.1rem;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.85;
+}
+
+/* Index page heading */
+
+.indexHead {
+  margin-bottom: 2.5rem;
+}
+
+.indexHead h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 4.6vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.indexHead p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.search {
+  display: block;
+  width: 100%;
+  margin-top: 1.75rem;
+  padding: 0.55rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 1rem;
+  transition: border-color 150ms ease;
+}
+
+.search::placeholder {
+  color: var(--faint);
+}
+
+.search:focus {
+  border-bottom-color: var(--gold);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin-top: 1.1rem;
+}
+
+.filter {
+  padding: 0.15rem 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.filter:hover {
+  color: var(--ink);
+}
+
+.filter[aria-pressed='true'] {
+  color: var(--ink);
+  box-shadow: inset 0 -0.5em var(--highlight);
+}
+
+.filter small {
+  margin-left: 0.3em;
+  color: var(--faint);
+  font-size: 0.86em;
+}
+
+/* Year groups and note rows */
+
+.year,
+.row {
+  grid-template-columns: var(--gutter) minmax(0, var(--measure));
+}
+
+.year {
+  align-items: center;
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.year:first-child {
+  margin-top: 0;
+}
+
+.year h2 {
+  color: var(--muted);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.yearRule {
+  height: 1px;
+  background: var(--line);
+}
+
+.list {
+  list-style: none;
+}
+
+.row {
+  align-items: baseline;
+  padding-block: 0.95rem;
+}
+
+.rowMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--faint);
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.rowMeta svg {
+  flex: none;
+}
+
+.rowTitle {
+  font-family: var(--font-serif);
+  font-size: 1.28rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* A highlighter stroke that sweeps under the title on hover. */
+.rowTitle span:first-child {
+  background-image: linear-gradient(var(--highlight), var(--highlight));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 0 0.45em;
+  transition: background-size 220ms ease;
+}
+
+.row:hover .rowTitle span:first-child,
+.row:focus-visible .rowTitle span:first-child {
+  background-size: 100% 0.45em;
+}
+
+.kind {
+  display: inline-block;
+  margin-left: 0.6em;
+  padding: 0.1em 0.45em;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.4;
+  vertical-align: 0.2em;
+  white-space: nowrap;
+}
+
+.rowSummary {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.75;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Compact rows for the full archive: one line per note. */
+
+.compact .row {
+  grid-template-columns: var(--gutter) minmax(0, var(--measure)) minmax(0, 1fr);
+  padding-block: 0.5rem;
+}
+
+.compact .rowTitle {
+  font-size: 1.1rem;
+}
+
+/* Tags sit in the aside column, out of the title's way. */
+.rowTags {
+  grid-column: 3;
+  overflow: hidden;
+  margin-left: 1.5rem;
+  color: var(--faint);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  transition: color 150ms ease;
+}
+
+.more:hover {
+  color: var(--ink);
+}
+
+.empty {
+  padding-block: 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.sectionGap {
+  margin-top: clamp(3rem, 8vw, 5rem);
+}
+
+.sectionTitle {
+  margin-bottom: 1.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.span {
+  grid-column: 1 / 3;
+  min-width: 0;
+}
+
+/* Aside: topics */
+
+.topics h2 {
+  margin-bottom: 0.75rem;
+  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.topics ul {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+}
+
+.topics a {
+  color: var(--muted);
+  font-size: 0.86rem;
+  transition: color 150ms ease;
+}
+
+.topics a:hover {
+  color: var(--ink);
+}
+
+.topics small {
+  margin-left: 0.4em;
+  color: var(--faint);
+  font-size: 0.86em;
+}
+
+/* Narrower screens: drop the aside, then fold the gutter into the flow. */
+
+@media (max-width: 1000px) {
+  .aside,
+  .rowTags {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    --gutter: 4.75rem;
+    --gap: 1rem;
+  }
+
+  .container,
+  .wide .container {
+    width: min(70rem, 100% - 2.5rem);
+  }
+
+  .header {
+    padding-block: 1.25rem;
+  }
+
+  .nav {
+    gap: 1.1rem;
+  }
+
+  /* The footer already links to GitHub; the header has no room for it. */
+  .navExternal {
+    display: none;
+  }
+
+  /* Pages whose gutter content moves above the body instead of beside it. */
+  .stack {
+    display: block;
+  }
+
+  .tonight {
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    margin-bottom: 1.75rem;
+  }
+
+  .rowMeta {
+    font-size: 0.9rem;
+  }
+
+  .rowTitle {
+    font-size: 1.15rem;
+  }
+
+  .compact .rowTitle {
+    font-size: 1.02rem;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeToggle,
+  .rowTitle span:first-child {
+    transition: none;
+  }
+}
